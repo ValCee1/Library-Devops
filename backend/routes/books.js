@@ -1,6 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const Book = require("../models/Book");
+const authMiddleware = require("../middleware/auth");
+
+// Protected route that requires authentication
+router.get("/protected-route", authMiddleware, (req, res) => {
+  // Only authenticated users can access this route
+  res.json({ message: "This is a protected route" });
+});
 
 // Get all books
 router.get("/", async (req, res) => {
