@@ -13,6 +13,7 @@ const authRoutes = require("./routes/auth");
 const bookRoutes = require("./routes/books");
 
 const app = express();
+
 // Middleware
 app.use(express.json());
 app.use(cors());
