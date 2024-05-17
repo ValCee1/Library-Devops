@@ -10,6 +10,7 @@ const cors = require("cors");
 const PORT = process.env.PORT || 5000;
 
 const authRoutes = require("./routes/auth");
+const bookRoutes = require("./routes/books");
 
 const app = express();
 // Middleware
@@ -34,6 +35,5 @@ mongoose
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/books", require("./routes/books"));
-
+app.use("/api/books", bookRoutes); // Add this line to use book routes
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

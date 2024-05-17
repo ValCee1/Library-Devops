@@ -7,11 +7,16 @@ import SearchBooks from "./components/SearchBooks";
 import BorrowBooks from "./components/BorrowBooks";
 import ReturnBooks from "./components/ReturnBooks";
 
+import HomePage from "./pages/HomePage"; // Assuming you have a HomePage component
+import NavBar from "./components/NavBar"; // Import the NavBar component
+
 const App = () => {
   return (
     <Router>
+      <NavBar /> {/* Include the NavBar component */}
       <div>
         <Routes>
+          <Route exact path="/" component={HomePage} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/search" element={<SearchBooks />} />
