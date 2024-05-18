@@ -7,6 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import UserHomePage from "./pages/UserHomePage";
 import NavBar from "./components/NavBar";
 import PrivateRoute from "./components/PrivateRoute";
+import AdminHomePage from "./pages/AdminHomePage";
 import "./pages/css/App.css";
 
 const App = () => {
@@ -22,6 +23,7 @@ const App = () => {
           path="/user/home"
           element={<PrivateRoute element={<UserHomePage />} />}
         />
+        <Route exact path="/admin-home" element={<AdminHomePage />} />
       </Routes>
     </Router>
   );

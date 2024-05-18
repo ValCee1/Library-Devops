@@ -4,60 +4,57 @@ import { useNavigate } from "react-router-dom";
 import "./css/RegisterPage.css";
 
 const RegisterPage = () => {
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
-  const [error, setError] = useState(null);
-
-  const { username, password } = formData;
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const onChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        formData
-      );
-      console.log(res.data);
-      localStorage.setItem("token", res.data.token);
-      navigate("/login");
+      const res = await axios.post("http://localhost:5000/api/auth/register", {
+        username,
+        email,
+        password,
+      });
+      if (res.data.token) {
+        navigate("/login");
+      }
     } catch (err) {
-      setError(err.response.data.message || "An error occurred");
+      setError("Failed to register");
+      console.error(err);
     }
   };
 
   return (
-    <div className="container">
-      <h1>Register</h1>
-      <form onSubmit={onSubmit}>
-        <div className="form-group">
-          <label>Username</label>
-          <input
-            type="text"
-            name="username"
-            value={username}
-            onChange={onChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Password</label>
-          <input
-            type="password"
-            name="password"
-            value={password}
-            onChange={onChange}
-            required
-          />
-        </div>
+    <div className="register-container">
+      <h2>Register</h2>
+      {error && <p className="error">{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
         <button type="submit">Register</button>
       </form>
-      {error && <div className="error">{error}</div>}
     </div>
   );
 };

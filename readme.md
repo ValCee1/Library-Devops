@@ -1,5 +1,5 @@
 Create an application that can manage a library. Users should be able to log into this app, search for books, borrow books and return books.
-The admin should be able to restock, track movement of the books, including return time and due dates.
+Some users are administrators. The admin should be able to restock books, track borrowed and available books, including return time and due dates. Each borrowed book is due to be returned after 2 weeks.
 
 We'll use Express.js for the server framework, MongoDB for the database, and JWT for authentication.Certainly! Here's a step-by-step guide to building a basic library website with user authentication using JWT (JSON Web Tokens), Node.js, Express.js for the backend, and React.js for the frontend:
 
