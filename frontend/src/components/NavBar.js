@@ -1,37 +1,50 @@
+// frontend/src/components/NavBar.js
+
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { isAuthenticated, logout } from "../utils/auth";
-import "../pages/css/NavBar.css";
+import "../pages/css/NavBar.css"; // Import the CSS file
 
 const NavBar = () => {
+  const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
-    navigate("/");
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   return (
-    <nav>
-      <ul>
-        {isAuthenticated() ? (
+    <nav className="navbar">
+      <ul className="navbar-list">
+        <li className="navbar-item">
+          <Link to="/" className="navbar-link">
+            Home
+          </Link>
+        </li>
+        <li className="navbar-item">
+          <Link to="/search" className="navbar-link">
+            Search
+          </Link>
+        </li>
+        {!token ? (
           <>
-            <li>
-              <Link to="/user/home">Home</Link>
+            <li className="navbar-item">
+              <Link to="/login" className="navbar-link">
+                Login
+              </Link>
             </li>
-            <li>
-              <button onClick={handleLogout}>Logout</button>
+            <li className="navbar-item">
+              <Link to="/register" className="navbar-link">
+                Register
+              </Link>
             </li>
           </>
         ) : (
-          <>
-            <li>
-              <Link to="/register">Register</Link>
-            </li>
-            <li>
-              <Link to="/login">Login</Link>
-            </li>
-          </>
+          <li className="navbar-item">
+            <button onClick={handleLogout} className="navbar-link">
+              Logout
+            </button>
+          </li>
         )}
       </ul>
     </nav>

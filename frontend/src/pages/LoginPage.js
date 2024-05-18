@@ -16,13 +16,23 @@ const LoginPage = () => {
         identifier,
         password,
       });
-      if (res.data.token) {
-        localStorage.setItem("token", res.data.token);
+      const { token } = res.data;
+
+      // Decode the token to get user information
+      const user = JSON.parse(atob(token.split(".")[1]));
+
+      // Store the token in localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("isAdmin", user.user.isAdmin);
+
+      // Redirect based on admin status
+      if (user.user.isAdmin) {
+        navigate("/admin-home");
+      } else {
         navigate("/user-home");
       }
     } catch (err) {
-      setError("Failed to login");
-      console.error(err);
+      setError("Invalid credentials");
     }
   };
 
