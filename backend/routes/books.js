@@ -90,4 +90,15 @@ router.get("/search", async (req, res) => {
   }
 });
 
+// Fetch user book history
+router.get("/history", authMiddleware, async (req, res) => {
+  try {
+    const books = await Book.find({ userId: req.user.id });
+    res.json(books);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
 module.exports = router;

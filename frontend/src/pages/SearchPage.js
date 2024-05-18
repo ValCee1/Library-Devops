@@ -1,32 +1,56 @@
-// frontend/src/pages/SearchPage.js
-
 import React, { useState } from "react";
-import SearchForm from "../components/SearchForm";
-import BookList from "../components/BookList"; // Assuming you have a BookList component to display search results
+import axios from "axios";
+import "./css/SearchPage.css";
 
 const SearchPage = () => {
-  const [searchResults, setSearchResults] = useState([]);
+  const [query, setQuery] = useState("");
+  const [books, setBooks] = useState([]);
+  const [error, setError] = useState(null);
 
-  const handleSearch = async (searchCriteria) => {
+  const onChange = (e) => setQuery(e.target.value);
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const response = await fetch(
-        `/api/books/search?title=${searchCriteria.title}&author=${searchCriteria.author}&genre=${searchCriteria.genre}`
+      const res = await axios.get(
+        `http://localhost:5000/api/books?search=${query}`
       );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data = await response.json();
-      setSearchResults(data);
-    } catch (error) {
-      console.error("Error searching for books:", error);
+      setBooks(res.data);
+      setError(null);
+    } catch (err) {
+      setError("Error fetching books");
     }
   };
 
   return (
-    <div>
-      <h2>Search for Books</h2>
-      <SearchForm onSearch={handleSearch} />
-      <BookList books={searchResults} />
+    <div className="container">
+      <h1>Search Books</h1>
+      <form onSubmit={onSubmit}>
+        <div className="form-group">
+          <label htmlFor="query">Search</label>
+          <input
+            type="text"
+            id="query"
+            value={query}
+            onChange={onChange}
+            required
+          />
+        </div>
+        <button type="submit">Search</button>
+      </form>
+      {error && <div className="error">{error}</div>}
+      <div className="results">
+        {books.length > 0 ? (
+          books.map((book) => (
+            <div key={book._id} className="book">
+              <h3>{book.title}</h3>
+              <p>{book.author}</p>
+            </div>
+          ))
+        ) : (
+          <p>No books found</p>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,28 +1,22 @@
 // backend/middleware/auth.js
 const jwt = require("jsonwebtoken");
+const config = require("config");
 
-const authMiddleware = (req, res, next) => {
-  // Check if Authorization header is present
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).json({ message: "Authorization header is missing" });
-  }
+const auth = (req, res, next) => {
+  const token = req.header("x-auth-token");
 
-  // Check if the token format is valid
-  const token = authHeader.split(" ")[1];
+  // Check if no token
   if (!token) {
-    return res.status(401).json({ message: "Invalid token format" });
+    return res.status(401).json({ msg: "No token, authorization denied" });
   }
 
   try {
-    // Verify the token
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decodedToken.userId;
+    const decoded = jwt.verify(token, config.get("jwtSecret"));
+    req.user = decoded.user;
     next();
-  } catch (error) {
-    console.error("Error verifying token:", error);
-    res.status(401).json({ message: "Invalid or expired token" });
+  } catch (err) {
+    res.status(401).json({ msg: "Token is not valid" });
   }
 };
 
-module.exports = authMiddleware;
+module.exports = auth;

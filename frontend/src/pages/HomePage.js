@@ -1,19 +1,11 @@
-// frontend/src/pages/HomePage.js
-
 import React from "react";
-import { Link } from "react-router-dom";
+import "./css/HomePage.css";
 
 const HomePage = () => {
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
+    <div className="container">
       <h1>Welcome to the Library App</h1>
-      <p>Find and borrow your favorite books online!</p>
-      <div style={{ marginTop: "20px" }}>
-        <Link to="/search" style={{ marginRight: "20px" }}>
-          Search for Books
-        </Link>
-        <Link to="/profile">View Profile</Link>
-      </div>
+      <p>Search and borrow books easily.</p>
     </div>
   );
 };
