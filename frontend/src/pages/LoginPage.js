@@ -4,56 +4,49 @@ import { useNavigate } from "react-router-dom";
 import "./css/LoginPage.css";
 
 const LoginPage = () => {
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const onChangeUsername = (e) => setUsername(e.target.value);
-  const onChangePassword = (e) => setPassword(e.target.value);
-
-  const onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", {
-        username,
+        identifier,
         password,
       });
-      localStorage.setItem("token", res.data.token);
-      setError(null);
-      navigate("/user/home"); //if logged in successfully
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+        navigate("/user-home");
+      }
     } catch (err) {
-      setError("Invalid username or password");
+      setError("Failed to login");
+      console.error(err);
     }
   };
 
   return (
     <div className="container">
-      <h1>Login</h1>
-      <form onSubmit={onSubmit}>
-        <div className="form-group">
-          <label htmlFor="username">Username</label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={onChangeUsername}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={onChangePassword}
-            required
-          />
-        </div>
+      <h2>Login</h2>
+      {error && <p className="error">{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Username or Email"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
         <button type="submit">Login</button>
       </form>
-      {error && <div className="error">{error}</div>}
     </div>
   );
 };
