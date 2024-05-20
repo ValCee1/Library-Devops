@@ -1,93 +1,117 @@
+// frontend/src/pages/AdminHomePage.js
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./css/AdminHomePage.css";
 
 const AdminHomePage = () => {
   const [books, setBooks] = useState([]);
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("");
-  const [quantity, setQuantity] = useState(0);
-  const [borrowedBooks, setBorrowedBooks] = useState([]);
+  const [error, setError] = useState("");
+  const [newBook, setNewBook] = useState({ title: "", author: "", isbn: "" });
 
   useEffect(() => {
-    const fetchBorrowedBooks = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "http://localhost:5000/api/admin/borrowed",
-          {
-            headers: {
-              "x-auth-token": token,
-            },
-          }
-        );
-        setBorrowedBooks(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchBorrowedBooks();
+    fetchBooks();
   }, []);
 
-  const handleRestock = async (e) => {
+  const fetchBooks = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/books");
+      setBooks(res.data);
+    } catch (err) {
+      setError("Error fetching books");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/books/${id}`);
+      fetchBooks();
+    } catch (err) {
+      setError("Error deleting book");
+    }
+  };
+
+  const handleAddBook = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post(
-        "http://localhost:5000/api/admin/restock",
-        { title, author, quantity },
-        {
-          headers: {
-            "x-auth-token": token,
-          },
-        }
-      );
-      setBooks([...books, res.data]);
+      await axios.post("http://localhost:5000/api/books", newBook);
+      setNewBook({ title: "", author: "", isbn: "" });
+      fetchBooks();
     } catch (err) {
-      console.error(err);
+      setError("Error adding book");
+    }
+  };
+
+  const handleChange = (e) => {
+    setNewBook({ ...newBook, [e.target.name]: e.target.value });
+  };
+
+  const handleReturn = async (id) => {
+    try {
+      await axios.post(`http://localhost:5000/api/books/return/${id}`, {
+        userId: null,
+      });
+      fetchBooks();
+    } catch (err) {
+      setError("Error returning book");
     }
   };
 
   return (
-    <div className="admin-container">
-      <h1>Admin Home Page</h1>
-      <h2>Restock Books</h2>
-      <form onSubmit={handleRestock}>
+    <div className="admin-home-page">
+      <h1>Admin Dashboard</h1>
+      {error && <div className="error">{error}</div>}
+
+      <form onSubmit={handleAddBook}>
         <input
           type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          name="title"
+          placeholder="Book Title"
+          value={newBook.title}
+          onChange={handleChange}
+          required
         />
         <input
           type="text"
+          name="author"
           placeholder="Author"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
+          value={newBook.author}
+          onChange={handleChange}
+          required
         />
         <input
-          type="number"
-          placeholder="Quantity"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
+          type="text"
+          name="isbn"
+          placeholder="ISBN"
+          value={newBook.isbn}
+          onChange={handleChange}
+          required
         />
-        <button type="submit">Restock</button>
+        <button type="submit">Add Book</button>
       </form>
 
-      <h2>Borrowed Books</h2>
-      <ul>
-        {borrowedBooks.map((book) => (
-          <li key={book._id}>
-            {book.title} by {book.author} - Borrowed by {book.user.name} on{" "}
-            {new Date(book.borrowedDate).toLocaleDateString()} (Due:{" "}
-            {new Date(
-              new Date(book.borrowedDate).getTime() + 14 * 24 * 60 * 60 * 1000
-            ).toLocaleDateString()}
-            )
-          </li>
+      <div className="book-list">
+        {books.map((book) => (
+          <div key={book._id} className="book-item">
+            <h2>{book.title}</h2>
+            <p>Author: {book.author}</p>
+            <p>ISBN: {book.isbn}</p>
+            <p>Available: {book.available ? "Yes" : "No"}</p>
+            {book.borrowedBy && <p>Borrowed By: {book.borrowedBy}</p>}
+            {book.dueDate && (
+              <p>Due Date: {new Date(book.dueDate).toLocaleDateString()}</p>
+            )}
+            <div className="actions">
+              <button className="delete" onClick={() => handleDelete(book._id)}>
+                Delete
+              </button>
+              {!book.available && (
+                <button onClick={() => handleReturn(book._id)}>Return</button>
+              )}
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };

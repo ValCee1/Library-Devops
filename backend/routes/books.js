@@ -6,65 +6,80 @@ const Book = require("../models/Book");
 const router = express.Router();
 
 // Add a new book
-router.post("/add", authMiddleware, async (req, res) => {
+router.post("/", async (req, res) => {
+  const { title, author, isbn } = req.body;
+
   try {
-    const newBook = new Book(req.body);
-    await newBook.save();
-    res.status(201).json({ message: "Book added successfully", book: newBook });
-  } catch (error) {
-    console.error("Error adding book:", error);
-    res.status(500).json({ message: "Internal server error" });
+    const newBook = new Book({
+      title,
+      author,
+      isbn,
+      available: true,
+    });
+
+    const book = await newBook.save();
+    res.json(book);
+  } catch (err) {
+    res.status(500).send("Server error");
   }
 });
 
 // Get all books
-router.get("/all", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const books = await Book.find();
     res.json(books);
-  } catch (error) {
-    console.error("Error fetching books:", error);
-    res.status(500).json({ message: "Internal server error" });
+  } catch (err) {
+    res.status(500).send("Server error");
   }
 });
 
 // Borrow a book
-router.post("/borrow/:id", authMiddleware, async (req, res) => {
+router.post("/borrow/:id", async (req, res) => {
+  const { userId } = req.body;
   try {
     const book = await Book.findById(req.params.id);
-    if (!book) {
-      return res.status(404).json({ message: "Book not found" });
-    }
-    if (!book.available) {
-      return res
-        .status(400)
-        .json({ message: "Book is not available for borrowing" });
-    }
+    if (!book.available) return res.status(400).send("Book is not available");
+
     book.available = false;
+    book.borrowedBy = userId;
+    book.borrowedAt = new Date();
+    book.dueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 2 weeks from now
+
     await book.save();
-    res.json({ message: "Book borrowed successfully", book });
-  } catch (error) {
-    console.error("Error borrowing book:", error);
-    res.status(500).json({ message: "Internal server error" });
+
+    await User.findByIdAndUpdate(userId, {
+      $push: { borrowedBooks: book._id },
+    });
+
+    res.json(book);
+  } catch (err) {
+    res.status(500).send("Server error");
   }
 });
 
 // Return a book
-router.post("/return/:id", authMiddleware, async (req, res) => {
+router.post("/return/:id", async (req, res) => {
+  const { userId } = req.body;
   try {
     const book = await Book.findById(req.params.id);
-    if (!book) {
-      return res.status(404).json({ message: "Book not found" });
-    }
-    if (book.available) {
-      return res.status(400).json({ message: "Book is already available" });
-    }
+    if (book.available)
+      return res.status(400).send("Book is already available");
+
     book.available = true;
+    book.borrowedBy = null;
+    book.borrowedAt = null;
+    book.dueDate = null;
+
     await book.save();
-    res.json({ message: "Book returned successfully", book });
-  } catch (error) {
-    console.error("Error returning book:", error);
-    res.status(500).json({ message: "Internal server error" });
+
+    await User.findByIdAndUpdate(userId, {
+      $pull: { borrowedBooks: book._id },
+    });
+
+    res.json(book);
+  } catch (err) {
+    res.status(500).send("Server error");
   }
 });
 
@@ -101,4 +116,13 @@ router.get("/history", authMiddleware, async (req, res) => {
   }
 });
 
+// Delete a book
+router.delete("/:id", async (req, res) => {
+  try {
+    await Book.findByIdAndDelete(req.params.id);
+    res.json({ msg: "Book deleted" });
+  } catch (err) {
+    res.status(500).send("Server error");
+  }
+});
 module.exports = router;
