@@ -1,10 +1,12 @@
+// frontend/src/pages/LoginPage.js
+
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./css/LoginPage.css";
 
 const LoginPage = () => {
-  const [identifier, setIdentifier] = useState("");
+  const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -13,48 +15,44 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", {
-        identifier,
+        usernameOrEmail,
         password,
       });
-      const { token } = res.data;
-
-      // Decode the token to get user information
-      const user = JSON.parse(atob(token.split(".")[1]));
-
-      // Store the token in localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("isAdmin", user.user.isAdmin);
-
-      // Redirect based on admin status
-      if (user.user.isAdmin) {
-        navigate("/admin-home");
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("isAdmin", res.data.user.isAdmin);
+      if (res.data.user.isAdmin) {
+        navigate("/admin");
       } else {
-        navigate("/user-home");
+        navigate("/user");
       }
     } catch (err) {
-      setError("Invalid credentials");
+      setError("Invalid credentials. Please try again.");
     }
   };
 
   return (
-    <div className="container">
+    <div className="login-container">
       <h2>Login</h2>
-      {error && <p className="error">{error}</p>}
+      {error && <div className="error">{error}</div>}
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Username or Email"
-          value={identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className="form-group">
+          <label>Username or Email</label>
+          <input
+            type="text"
+            value={usernameOrEmail}
+            onChange={(e) => setUsernameOrEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
         <button type="submit">Login</button>
       </form>
     </div>

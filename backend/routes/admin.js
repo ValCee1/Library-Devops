@@ -3,17 +3,22 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 const Book = require("../models/Book");
 const User = require("../models/User");
+const admin = require("../middleware/admin");
 
-// Middleware to check if user is admin
-const adminAuth = (req, res, next) => {
-  if (!req.user.isAdmin) {
-    return res.status(403).json({ msg: "Access denied, admin only" });
+// Middleware to check if the user is an admin
+const adminMiddleware = [auth, admin];
+
+router.get("/users", adminMiddleware, async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching users" });
   }
-  next();
-};
+});
 
 // Restock a book
-router.post("/restock", [auth, adminAuth], async (req, res) => {
+router.post("/restock", [auth, admin], async (req, res) => {
   const { title, author, quantity } = req.body;
 
   try {
@@ -38,7 +43,7 @@ router.post("/restock", [auth, adminAuth], async (req, res) => {
 });
 
 // Get all borrowed books with due dates
-router.get("/borrowed", [auth, adminAuth], async (req, res) => {
+router.get("/borrowed", [auth, admin], async (req, res) => {
   try {
     const books = await Book.find({ borrowedDate: { $exists: true } }).populate(
       "user",

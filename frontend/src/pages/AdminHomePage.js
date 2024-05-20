@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import UserManagement from "../components/UserManagement";
 import "./css/AdminHomePage.css";
 
 const AdminHomePage = () => {
@@ -89,6 +90,8 @@ const AdminHomePage = () => {
         />
         <button type="submit">Add Book</button>
       </form>
+
+      <UserManagement />
 
       <div className="book-list">
         {books.map((book) => (

@@ -3,12 +3,12 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
+import UserHomePage from "./pages/UserHomePage";
 import SearchPage from "./pages/SearchPage";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
-import UserHomePage from "./pages/UserHomePage";
 import AdminHomePage from "./pages/AdminHomePage";
-import UserManagement from "./pages/UserManagement";
+import UserManagement from "./components/UserManagement";
 import NavBar from "./components/NavBar";
 import "./pages/css/App.css";
 
@@ -24,6 +24,7 @@ const App = () => {
         <Route exact path="/user" element={<UserHomePage />} />
         <Route exact path="/admin" element={<AdminHomePage />} />
         <Route exact path="/admin/users" element={<UserManagement />} />
+        {/* Add other routes as needed */}
       </Routes>
     </Router>
   );
