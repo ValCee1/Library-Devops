@@ -12,6 +12,7 @@ const authRoutes = require("./routes/auth");
 const bookRoutes = require("./routes/books");
 const userRoutes = require("./routes/users");
 const adminRoutes = require("./routes/admin");
+const remindersRoutes = require("./routes/reminders");
 const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -38,6 +39,7 @@ mongoose
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/reminders", remindersRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes); // Add this line to use book routes

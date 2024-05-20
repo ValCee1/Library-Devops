@@ -1,0 +1,36 @@
+.book-management {
+    margin: 20px 0;
+  }
+  
+  .add-book-form {
+    margin-bottom: 20px;
+  }
+  
+  .add-book-form input {
+    margin-right: 10px;
+    padding: 5px;
+  }
+  
+  .add-book-form button {
+    padding: 5px 10px;
+  }
+  
+  .book-management table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .book-management th,
+  .book-management td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  
+  .book-management th {
+    background-color: #f2f2f2;
+  }
+  
+  .book-management tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  

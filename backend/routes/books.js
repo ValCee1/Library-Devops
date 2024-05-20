@@ -1,31 +1,15 @@
 // backend/routes/books.js
 const express = require("express");
-const authMiddleware = require("../middleware/auth");
+const router = express.Router();
+const auth = require("../middleware/auth");
+const admin = require("../middleware/admin");
 const Book = require("../models/Book");
 
-const router = express.Router();
-
-// Add a new book
-router.post("/", async (req, res) => {
-  const { title, author, isbn } = req.body;
-
-  try {
-    const newBook = new Book({
-      title,
-      author,
-      isbn,
-      available: true,
-    });
-
-    const book = await newBook.save();
-    res.json(book);
-  } catch (err) {
-    res.status(500).send("Server error");
-  }
-});
+// Middleware to check if the user is an admin
+const adminMiddleware = [auth, admin];
 
 // Get all books
-router.get("/", async (req, res) => {
+router.get("/", auth, async (req, res) => {
   try {
     const books = await Book.find();
     res.json(books);
@@ -34,53 +18,10 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Borrow a book
-router.post("/borrow/:id", async (req, res) => {
-  const { userId } = req.body;
-  try {
-    const book = await Book.findById(req.params.id);
-    if (!book.available) return res.status(400).send("Book is not available");
-
-    book.available = false;
-    book.borrowedBy = userId;
-    book.borrowedAt = new Date();
-    book.dueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 2 weeks from now
-
-    await book.save();
-
-    await User.findByIdAndUpdate(userId, {
-      $push: { borrowedBooks: book._id },
-    });
-
-    res.json(book);
-  } catch (err) {
-    res.status(500).send("Server error");
-  }
-});
-
-// Return a book
-router.post("/return/:id", async (req, res) => {
-  const { userId } = req.body;
-  try {
-    const book = await Book.findById(req.params.id);
-    if (book.available)
-      return res.status(400).send("Book is already available");
-
-    book.available = true;
-    book.borrowedBy = null;
-    book.borrowedAt = null;
-    book.dueDate = null;
-
-    await book.save();
-
-    await User.findByIdAndUpdate(userId, {
-      $pull: { borrowedBooks: book._id },
-    });
-
-    res.json(book);
-  } catch (err) {
-    res.status(500).send("Server error");
-  }
+// Get all books
+router.get("/", auth, async (req, res) => {
+  const books = await Book.find().populate("borrower", "username email");
+  res.json(books);
 });
 
 // Route to search for books
@@ -106,7 +47,7 @@ router.get("/search", async (req, res) => {
 });
 
 // Fetch user book history
-router.get("/history", authMiddleware, async (req, res) => {
+router.get("/history", adminMiddleware, async (req, res) => {
   try {
     const books = await Book.find({ userId: req.user.id });
     res.json(books);
@@ -116,13 +57,50 @@ router.get("/history", authMiddleware, async (req, res) => {
   }
 });
 
+// Borrow a book
+router.put("/borrow/:id", auth, async (req, res) => {
+  const book = await Book.findById(req.params.id);
+  if (!book) return res.status(404).json({ msg: "Book not found" });
+  if (!book.isAvailable)
+    return res.status(400).json({ msg: "Book is already borrowed" });
+
+  book.isAvailable = false;
+  book.borrower = req.user.id;
+  book.borrowedDate = new Date();
+  book.dueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 2 weeks from now
+
+  await book.save();
+  res.json(book);
+});
+
+// Return a book
+router.put("/return/:id", auth, async (req, res) => {
+  const book = await Book.findById(req.params.id);
+  if (!book) return res.status(404).json({ msg: "Book not found" });
+  if (book.isAvailable)
+    return res.status(400).json({ msg: "Book is already available" });
+
+  book.isAvailable = true;
+  book.borrower = null;
+  book.borrowedDate = null;
+  book.dueDate = null;
+
+  await book.save();
+  res.json(book);
+});
+
+// Add a new book
+router.post("/", adminMiddleware, async (req, res) => {
+  const { title, author } = req.body;
+  let book = new Book({ title, author });
+  book = await book.save();
+  res.json(book);
+});
+
 // Delete a book
-router.delete("/:id", async (req, res) => {
-  try {
-    await Book.findByIdAndDelete(req.params.id);
-    res.json({ msg: "Book deleted" });
-  } catch (err) {
-    res.status(500).send("Server error");
-  }
+router.delete("/:id", adminMiddleware, async (req, res) => {
+  const book = await Book.findByIdAndDelete(req.params.id);
+  if (!book) return res.status(404).json({ msg: "Book not found" });
+  res.json({ msg: "Book deleted" });
 });
 module.exports = router;
