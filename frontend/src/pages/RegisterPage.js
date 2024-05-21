@@ -18,9 +18,9 @@ const RegisterPage = () => {
         email,
         password,
       });
-      if (res.data.token) {
-        navigate("/login");
-      }
+
+      localStorage.setItem("token", res.data.token);
+      navigate("/user");
     } catch (err) {
       setError("Failed to register");
       console.error(err);

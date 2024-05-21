@@ -8,41 +8,40 @@ const Book = require("../models/Book");
 // Middleware to check if the user is an admin
 const adminMiddleware = [auth, admin];
 
-// Get all books
+// Fetch all books
 router.get("/", auth, async (req, res) => {
   try {
     const books = await Book.find();
     res.json(books);
-  } catch (err) {
-    res.status(500).send("Server error");
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching books" });
   }
 });
 
-// Get all books
-router.get("/", auth, async (req, res) => {
-  const books = await Book.find().populate("borrower", "username email");
-  res.json(books);
-});
-
-// Route to search for books
-router.get("/search", async (req, res) => {
+// Fetch borrowed books for the logged-in user
+router.get("/borrowed", auth, async (req, res) => {
   try {
-    const { title, author, genre } = req.query;
-
-    // Build the search query based on provided criteria
-    const query = {};
-    if (title) query.title = { $regex: new RegExp(title, "i") }; // Case-insensitive search for title
-    if (author) query.author = { $regex: new RegExp(author, "i") }; // Case-insensitive search for author
-    if (genre) query.genre = { $regex: new RegExp(genre, "i") }; // Case-insensitive search for genre
-
-    // Execute the search query
-    const books = await Book.find(query);
-
-    // Return the search results
+    const books = await Book.find({ borrower: req.user.id });
     res.json(books);
   } catch (error) {
-    console.error("Error searching for books:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ error: "Error fetching borrowed books" });
+  }
+});
+
+// Search for books
+router.get("/search", async (req, res) => {
+  const { query } = req.query;
+  try {
+    const books = await Book.find({
+      $or: [
+        { title: { $regex: query, $options: "i" } },
+        { author: { $regex: query, $options: "i" } },
+      ],
+    });
+    res.json(books);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
   }
 });
 
@@ -58,19 +57,26 @@ router.get("/history", adminMiddleware, async (req, res) => {
 });
 
 // Borrow a book
-router.put("/borrow/:id", auth, async (req, res) => {
-  const book = await Book.findById(req.params.id);
-  if (!book) return res.status(404).json({ msg: "Book not found" });
-  if (!book.isAvailable)
-    return res.status(400).json({ msg: "Book is already borrowed" });
+router.post("/borrow/:id", auth, async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ error: "Book not found" });
+    }
+    if (!book.isAvailable) {
+      return res.status(400).json({ error: "Book is not available" });
+    }
 
-  book.isAvailable = false;
-  book.borrower = req.user.id;
-  book.borrowedDate = new Date();
-  book.dueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 2 weeks from now
+    book.isAvailable = false;
+    book.borrower = req.user.id;
+    book.borrowedDate = new Date();
+    book.dueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 2 weeks from now
 
-  await book.save();
-  res.json(book);
+    await book.save();
+    res.json({ message: "Book borrowed successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Error borrowing book" });
+  }
 });
 
 // Return a book

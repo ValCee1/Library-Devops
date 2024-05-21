@@ -17,8 +17,10 @@ const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
 
-// Middleware
-app.use(express.json());
+// Init Middleware
+app.use(express.json({ extended: false }));
+
+// Enable CORS
 app.use(cors());
 
 // MongoDB connection

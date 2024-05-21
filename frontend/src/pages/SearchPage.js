@@ -1,3 +1,5 @@
+// frontend/src/pages/SearchPage.js
+
 import React, { useState } from "react";
 import axios from "axios";
 import "./css/SearchPage.css";
@@ -5,50 +7,72 @@ import "./css/SearchPage.css";
 const SearchPage = () => {
   const [query, setQuery] = useState("");
   const [books, setBooks] = useState([]);
-  const [error, setError] = useState(null);
 
-  const onChange = (e) => setQuery(e.target.value);
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
+  const handleSearch = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/books?search=${query}`
+        `http://localhost:5000/api/books/search?query=${query}`
       );
       setBooks(res.data);
-      setError(null);
     } catch (err) {
-      setError("Error fetching books");
+      console.error(err.message);
+      alert("Error searching for books");
+    }
+  };
+
+  const handleBorrow = async (bookId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please log in to borrow books");
+        return;
+      }
+      await axios.post(
+        `http://localhost:5000/api/books/borrow/${bookId}`,
+        {},
+        {
+          headers: {
+            "x-auth-token": token,
+          },
+        }
+      );
+      alert("Book borrowed successfully");
+      handleSearch(); // Refresh the search results
+    } catch (err) {
+      console.error(err.message);
+      alert("Error borrowing the book");
     }
   };
 
   return (
     <div className="container">
-      <h1>Search Books</h1>
-      <form onSubmit={onSubmit}>
-        <div className="form-group">
-          <label htmlFor="query">Search</label>
-          <input
-            type="text"
-            id="query"
-            value={query}
-            onChange={onChange}
-            required
-          />
-        </div>
-        <button type="submit">Search</button>
-      </form>
-      {error && <div className="error">{error}</div>}
+      <h1>Search for Books</h1>
+
+      <div className="form-group">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+      <button onClick={handleSearch}>Search</button>
+
       <div className="results">
         {books.length > 0 ? (
           books.map((book) => (
             <div key={book._id} className="book">
               <h3>{book.title}</h3>
               <p>{book.author}</p>
+              <button
+                onClick={() => handleBorrow(book._id)}
+                disabled={!book.isAvailable}
+              >
+                {book.isAvailable ? "Borrow" : "Unavailable"}
+              </button>
             </div>
           ))
         ) : (
-          <p>No books found</p>
+          <p>No results found</p>
         )}
       </div>
     </div>

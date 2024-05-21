@@ -1,15 +1,14 @@
-const express = require("express");
-const router = express.Router();
-const auth = require("../middleware/auth");
-const admin = require("../middleware/admin");
-const Book = require("../models/Book");
+const cron = require("node-cron");
 const nodemailer = require("nodemailer");
+const Book = require("./models/Book");
 
-router.post("/send-reminders", [auth, admin], async (req, res) => {
-  const books = await Book.find({ isAvailable: false }).populate(
-    "borrower",
-    "email username"
-  );
+// Daily at 8 AM
+cron.schedule("0 8 * * *", async () => {
+  const books = await Book.find({
+    isAvailable: false,
+    dueDate: { $lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+  }).populate("borrower", "email username");
+
   const transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
@@ -23,9 +22,7 @@ router.post("/send-reminders", [auth, admin], async (req, res) => {
       from: "Library Admin",
       to: book.borrower.email,
       subject: "Book Return Reminder",
-      text: `Dear ${
-        book.borrower.username
-      },\n\nThis is to remind you to return the book "${
+      text: `Dear ${book.borrower.username},\n\nPlease return the book "${
         book.title
       }" by ${book.dueDate.toDateString()}.\n\nThank you!`,
     };
@@ -38,8 +35,4 @@ router.post("/send-reminders", [auth, admin], async (req, res) => {
       }
     });
   });
-
-  res.json({ msg: "Reminders sent" });
 });
-
-module.exports = router;
