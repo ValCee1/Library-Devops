@@ -1,6 +1,6 @@
 // src/pages/UserHomePage.js
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./css/UserHomePage.css";
@@ -10,40 +10,44 @@ const UserHomePage = () => {
   const [bookHistory, setBookHistory] = useState([]);
   const navigate = useNavigate();
 
-  const fetchBooks = async () => {
+  const fetchBooks = useCallback(async () => {
     try {
-      const response = await axios.get("/api/books", {
+      const response = await axios.get("http://localhost:5000/api/books", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setBooks(response.data);
     } catch (error) {
       console.error("Error fetching books:", error);
       if (error.response.status === 401) {
+        localStorage.removeItem("token");
         navigate("/login");
       }
     }
-  };
+  }, [navigate]);
 
-  const fetchBookHistory = async () => {
+  const fetchBookHistory = useCallback(async () => {
     try {
-      const response = await axios.get("/api/users/bookhistory", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      const response = await axios.get(
+        "http://localhost:5000/api/users/bookhistory",
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
       setBookHistory(response.data);
     } catch (error) {
       console.error("Error fetching book history:", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchBooks();
     fetchBookHistory();
-  }, [navigate]);
+  }, [fetchBooks, fetchBookHistory]);
 
   const handleBorrow = async (bookId) => {
     try {
       await axios.post(
-        `/api/books/borrow/${bookId}`,
+        `http://localhost:5000/api/books/borrow/${bookId}`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

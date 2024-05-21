@@ -8,7 +8,7 @@ const ReturnBooks = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const { data } = await axios.get("/api/books");
+        const { data } = await axios.get("http://localhost:5000/api/books");
         setBorrowedBooks(data.filter((book) => !book.available));
       } catch (error) {
         console.error(
@@ -23,7 +23,7 @@ const ReturnBooks = () => {
 
   const handleReturn = async (bookId) => {
     try {
-      await axios.post("/api/books/return", { bookId });
+      await axios.post("http://localhost:5000/api/books/return", { bookId });
       setBorrowedBooks(borrowedBooks.filter((book) => book._id !== bookId));
     } catch (error) {
       console.error(
