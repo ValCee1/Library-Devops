@@ -1,3 +1,89 @@
+// frontend/src/pages/UserHomePage.js
+
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import "./css/UserHomePage.css";
+
+const UserHomePage = () => {
+  const [books, setBooks] = useState([]);
+  const [borrowedBook, setBorrowedBook] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/books");
+        setBooks(res.data);
+      } catch (err) {
+        setError("Error fetching books");
+      }
+    };
+
+    const fetchBorrowedBook = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/books/borrowed");
+        setBorrowedBook(res.data);
+      } catch (err) {
+        setError("Error fetching borrowed book");
+      }
+    };
+
+    fetchBooks();
+    fetchBorrowedBook();
+  }, []);
+
+  const borrowBook = async (id) => {
+    try {
+      const res = await axios.post(
+        `http://localhost:5000/api/books/borrow/${id}`,
+        {},
+        {
+          headers: { "x-auth-token": localStorage.getItem("token") },
+        }
+      );
+      setBorrowedBook(res.data);
+    } catch (err) {
+      setError("Error borrowing book");
+    }
+  };
+
+  return (
+    <div className="user-home-page">
+      <h1>User Dashboard</h1>
+      {error && <div className="error">{error}</div>}
+      <div className="book-list">
+        {books.map((book) => (
+          <div key={book._id} className="book-item">
+            <h2>{book.title}</h2>
+            <p>Author: {book.author}</p>
+            <p>ISBN: {book.isbn}</p>
+            <p>Available: {book.available ? "Yes" : "No"}</p>
+            {book.available && !borrowedBook && (
+              <button onClick={() => borrowBook(book._id)}>Borrow</button>
+            )}
+          </div>
+        ))}
+      </div>
+      {borrowedBook && (
+        <div>
+          <h2>Your Borrowed Book</h2>
+          <div className="book-item">
+            <h2>{borrowedBook.title}</h2>
+            <p>Author: {borrowedBook.author}</p>
+            <p>ISBN: {borrowedBook.isbn}</p>
+            <p>
+              Due Date: {new Date(borrowedBook.dueDate).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UserHomePage;
+
+/*
 // src/pages/UserHomePage.js
 
 import React, { useEffect, useState, useCallback } from "react";
@@ -106,3 +192,4 @@ const UserHomePage = () => {
 };
 
 export default UserHomePage;
+*/

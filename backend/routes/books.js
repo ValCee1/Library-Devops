@@ -61,10 +61,21 @@ router.post("/borrow/:id", auth, async (req, res) => {
   try {
     const book = await Book.findById(req.params.id);
     if (!book) {
-      return res.status(404).json({ error: "Book not found" });
+      return res.status(404).json({ msg: "Book not found" });
     }
+
     if (!book.isAvailable) {
-      return res.status(400).json({ error: "Book is not available" });
+      return res.status(400).json({ msg: "Book is not available" });
+    }
+
+    // Check if the user already has a borrowed book
+    const user = await User.findById(req.user.id);
+    const borrowedBook = await Book.findOne({ borrowedBy: user.username });
+
+    if (borrowedBook) {
+      return res.status(400).json({
+        msg: "You already have a borrowed book. Please return it first.",
+      });
     }
 
     book.isAvailable = false;
@@ -73,26 +84,38 @@ router.post("/borrow/:id", auth, async (req, res) => {
     book.dueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 2 weeks from now
 
     await book.save();
-    res.json({ message: "Book borrowed successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Error borrowing book" });
+    res.json(book);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
   }
 });
 
 // Return a book
-router.put("/return/:id", auth, async (req, res) => {
-  const book = await Book.findById(req.params.id);
-  if (!book) return res.status(404).json({ msg: "Book not found" });
-  if (book.isAvailable)
-    return res.status(400).json({ msg: "Book is already available" });
+router.post("/return/:id", auth, async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ msg: "Book not found" });
+    }
 
-  book.isAvailable = true;
-  book.borrower = null;
-  book.borrowedDate = null;
-  book.dueDate = null;
+    if (book.available) {
+      return res
+        .status(400)
+        .json({ msg: "Book is already marked as available" });
+    }
 
-  await book.save();
-  res.json(book);
+    book.isAvailable = true;
+    book.borrower = null;
+    book.borrowedDate = null;
+    book.dueDate = null;
+
+    await book.save();
+    res.json(book);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
 });
 
 // Add a new book
