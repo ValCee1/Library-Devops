@@ -18,13 +18,20 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
-// Fetch borrowed books for the logged-in user
+// Get books borrowed by the logged-in user
 router.get("/borrowed", auth, async (req, res) => {
   try {
-    const books = await Book.find({ borrower: req.user.id });
-    res.json(books);
+    const userId = req.user.id; // Assuming req.user contains the logged-in user's details
+    const borrowedBooks = await Book.find({ borrower: userId });
+    console.log(borrowedBooks);
+    if (!borrowedBooks.length) {
+      return res.json({ message: "You have not borrowed any books" });
+    }
+    res.json(borrowedBooks);
   } catch (error) {
-    res.status(500).json({ error: "Error fetching borrowed books" });
+    res
+      .status(500)
+      .json({ message: "Error fetching borrowed books", error: error.message });
   }
 });
 

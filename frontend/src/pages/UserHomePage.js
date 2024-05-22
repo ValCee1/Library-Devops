@@ -32,6 +32,7 @@ const UserHomePage = () => {
         setError("Error fetching books");
       }
     };
+
     const fetchBorrowedBook = async () => {
       try {
         const res = await api.get("/api/books/borrowed", {
@@ -78,7 +79,7 @@ const UserHomePage = () => {
       {error && <div className="error">{error}</div>}
       <div className="container">
         <h2>Your Borrowed Books</h2>
-        {books.length === 0 ? (
+        {borrowedBook.length === 0 ? (
           <p>You have not borrowed or returned any book yet</p>
         ) : (
           <ul className="book-list">
