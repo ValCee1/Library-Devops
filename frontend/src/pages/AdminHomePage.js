@@ -13,7 +13,7 @@ const AdminHomePage = () => {
     const fetchBooks = async () => {
       try {
         const res = await api.get("/api/admin/books", {
-          headers: { "x-auth-token": localStorage.getItem("token") },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setBooks(res.data);
       } catch (err) {
@@ -24,7 +24,7 @@ const AdminHomePage = () => {
     const fetchUsers = async () => {
       try {
         const res = await api.get("/api/admin/users", {
-          headers: { "x-auth-token": localStorage.getItem("token") },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setUsers(res.data);
       } catch (err) {
@@ -41,7 +41,9 @@ const AdminHomePage = () => {
       const res = await api.post(
         "/api/admin/books",
         { title, author, isbn },
-        { headers: { "x-auth-token": localStorage.getItem("token") } }
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
       );
       setBooks([...books, res.data]);
     } catch (err) {
@@ -52,7 +54,7 @@ const AdminHomePage = () => {
   const deleteBook = async (id) => {
     try {
       await api.delete(`/api/admin/books/${id}`, {
-        headers: { "x-auth-token": localStorage.getItem("token") },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setBooks(books.filter((book) => book._id !== id));
     } catch (err) {
@@ -66,7 +68,7 @@ const AdminHomePage = () => {
         `/api/admin/return/${id}`,
         {},
         {
-          headers: { "x-auth-token": localStorage.getItem("token") },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
       const updatedBooks = books.map((book) =>
@@ -84,7 +86,7 @@ const AdminHomePage = () => {
         `/api/admin/users/suspend/${id}`,
         {},
         {
-          headers: { "x-auth-token": localStorage.getItem("token") },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
       setUsers(
@@ -100,7 +102,7 @@ const AdminHomePage = () => {
   const deleteUser = async (id) => {
     try {
       await api.delete(`/api/admin/users/${id}`, {
-        headers: { "x-auth-token": localStorage.getItem("token") },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setUsers(users.filter((user) => user._id !== id));
     } catch (err) {
@@ -116,7 +118,7 @@ const AdminHomePage = () => {
         <h2>Books</h2>
         {books.map((book) => (
           <div key={book._id} className="book-item">
-            <h2>{book.title}</h2>
+            <h3>{book.title}</h3>
             <p>Author: {book.author}</p>
             <p>ISBN: {book.isbn}</p>
             <p>Available: {book.available ? "Yes" : "No"}</p>
@@ -132,7 +134,7 @@ const AdminHomePage = () => {
             <button onClick={() => deleteBook(book._id)}>Delete</button>
           </div>
         ))}
-        <div>
+        <div className="add-book">
           <h3>Add New Book</h3>
           <input type="text" placeholder="Title" id="title" />
           <input type="text" placeholder="Author" id="author" />
@@ -154,7 +156,7 @@ const AdminHomePage = () => {
         <h2>Users</h2>
         {users.map((user) => (
           <div key={user._id} className="user-item">
-            <h2>{user.username}</h2>
+            <h3>{user.username}</h3>
             <p>Email: {user.email}</p>
             <p>Suspended: {user.suspended ? "Yes" : "No"}</p>
             <button onClick={() => suspendUser(user._id)}>Suspend</button>
@@ -165,4 +167,5 @@ const AdminHomePage = () => {
     </div>
   );
 };
+
 export default AdminHomePage;
