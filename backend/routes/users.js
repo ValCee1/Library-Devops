@@ -15,12 +15,13 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Delete a user
-router.delete("/:id", async (req, res) => {
+// Get user profile
+router.get("/profile", auth, async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.params.id);
-    res.json({ msg: "User deleted" });
+    const user = await User.findById(req.user.id).select("-password");
+    res.json(user);
   } catch (err) {
+    console.error(err.message);
     res.status(500).send("Server error");
   }
 });

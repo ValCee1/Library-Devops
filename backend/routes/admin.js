@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { check, validationResult } = require("express-validator");
 const auth = require("../middleware/auth");
 const Book = require("../models/Book");
 const User = require("../models/User");
@@ -19,8 +20,19 @@ router.get("/users", adminMiddleware, async (req, res) => {
   }
 });
 
+// Get all books
+router.get("/books", adminMiddleware, async (req, res) => {
+  try {
+    const books = await Book.find();
+    res.json(books);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
 // Restock a book
-router.post("/restock", [auth, admin], async (req, res) => {
+router.post("/restock", adminMiddleware, async (req, res) => {
   const { title, author, quantity } = req.body;
 
   try {
@@ -44,7 +56,7 @@ router.post("/restock", [auth, admin], async (req, res) => {
 });
 
 // Get all borrowed books with due dates
-router.get("/borrowed", [auth, admin], async (req, res) => {
+router.get("/borrowed", adminMiddleware, async (req, res) => {
   try {
     const books = await Book.find({ borrowedDate: { $exists: true } }).populate(
       "user",
@@ -58,7 +70,7 @@ router.get("/borrowed", [auth, admin], async (req, res) => {
 });
 
 // Mark a book as returned
-router.put("/return/:id", [auth, admin], async (req, res) => {
+router.put("/return/:id", adminMiddleware, async (req, res) => {
   const book = await Book.findById(req.params.id);
   if (!book) return res.status(404).json({ msg: "Book not found" });
 
@@ -72,7 +84,7 @@ router.put("/return/:id", [auth, admin], async (req, res) => {
 });
 
 // Send reminder email
-router.post("/send-reminder/:id", [auth, admin], async (req, res) => {
+router.post("/send-reminder/:id", adminMiddleware, async (req, res) => {
   const book = await Book.findById(req.params.id).populate(
     "borrower",
     "email username"
@@ -107,7 +119,7 @@ router.post("/send-reminder/:id", [auth, admin], async (req, res) => {
 });
 
 // Extend borrow time by 1 week
-router.put("/extend/:id", [auth, admin], async (req, res) => {
+router.put("/extend/:id", adminMiddleware, async (req, res) => {
   const book = await Book.findById(req.params.id);
   if (!book) return res.status(404).json({ msg: "Book not found" });
   if (!book.dueDate || book.dueDate <= new Date())
@@ -120,4 +132,98 @@ router.put("/extend/:id", [auth, admin], async (req, res) => {
   res.json(book);
 });
 
+// Fetch user book history
+router.get("/history", adminMiddleware, async (req, res) => {
+  try {
+    const books = await Book.find({ userId: req.user.id });
+    res.json(books);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+// Add a new book
+router.post(
+  "/books",
+  [
+    adminMiddleware,
+    [
+      check("title", "Title is required").not().isEmpty(),
+      check("author", "Author is required").not().isEmpty(),
+      check("isbn", "ISBN is required").not().isEmpty(),
+    ],
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { title, author, isbn } = req.body;
+
+    try {
+      const newBook = new Book({
+        title,
+        author,
+        isbn,
+      });
+
+      const book = await newBook.save();
+      res.json(book);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Server error");
+    }
+  }
+);
+
+// Delete a book
+router.delete("/books/:id", adminMiddleware, async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ msg: "Book not found" });
+    }
+
+    await book.remove();
+    res.json({ msg: "Book removed" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+// Suspend a user
+router.patch("/users/suspend/:id", adminMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    user.suspended = true;
+    await user.save();
+    res.json({ msg: "User suspended" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
+// Delete a user
+router.delete("/users/:id", adminMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    await user.remove();
+    res.json({ msg: "User removed" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
 module.exports = router;

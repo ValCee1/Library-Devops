@@ -1,7 +1,7 @@
 // frontend/src/pages/SearchPage.js
 
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../config/axios";
 import "./css/SearchPage.css";
 
 const SearchPage = () => {
@@ -10,9 +10,7 @@ const SearchPage = () => {
 
   const handleSearch = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/books/search?query=${query}`
-      );
+      const res = await api.get(`/api/books/search?query=${query}`);
       setBooks(res.data);
     } catch (err) {
       console.error(err.message);
@@ -27,8 +25,8 @@ const SearchPage = () => {
         alert("Please log in to borrow books");
         return;
       }
-      await axios.post(
-        `http://localhost:5000/api/books/borrow/${bookId}`,
+      await api.post(
+        `/api/books/borrow/${bookId}`,
         {},
         {
           headers: {

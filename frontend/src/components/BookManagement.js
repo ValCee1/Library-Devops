@@ -1,7 +1,7 @@
 // frontend/src/components/BookManagement.js
 
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../config/axios";
 import "../pages/css/BookManagement.css";
 
 const BookManagement = ({ books }) => {
@@ -12,8 +12,8 @@ const BookManagement = ({ books }) => {
   const addBook = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
-        "http://localhost:5000/api/books",
+      await api.post(
+        "/api/books",
         { title, author },
         {
           headers: {
@@ -30,7 +30,7 @@ const BookManagement = ({ books }) => {
   const deleteBook = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/books/${id}`, {
+      await api.delete(`/api/books/${id}`, {
         headers: {
           "x-auth-token": token,
         },
@@ -44,8 +44,8 @@ const BookManagement = ({ books }) => {
   const sendReminders = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
-        "http://localhost:5000/api/reminders/send-reminders",
+      await api.post(
+        "/api/reminders/send-reminders",
         {},
         {
           headers: {
@@ -56,6 +56,24 @@ const BookManagement = ({ books }) => {
       // Display success message or handle state update
     } catch (err) {
       setError("Error sending reminders");
+    }
+  };
+
+  const returnBook = async (id) => {
+    try {
+      const res = await api.post(
+        `/api/books/return/${id}`,
+        {},
+        {
+          headers: { "x-auth-token": localStorage.getItem("token") },
+        }
+      );
+      const updatedBooks = books.map((book) =>
+        book._id === res.data._id ? res.data : book
+      );
+      setBooks(updatedBooks);
+    } catch (err) {
+      setError("Error returning book");
     }
   };
 
@@ -88,16 +106,18 @@ const BookManagement = ({ books }) => {
           </tr>
         </thead>
         <tbody>
-          {books.map((book) => (
-            <tr key={book._id}>
-              <td>{book.title}</td>
-              <td>{book.author}</td>
-              <td>{book.isAvailable ? "Available" : "Borrowed"}</td>
-              <td>
-                <button onClick={() => deleteBook(book._id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
+          <div className="book-list">
+            {books.map((book) => (
+              <tr key={book._id}>
+                <td>{book.title}</td>
+                <td>{book.author}</td>
+                <td>{book.isAvailable ? "Available" : "Borrowed"}</td>
+                <td>
+                  <button onClick={() => deleteBook(book._id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </div>
         </tbody>
       </table>
       <button onClick={sendReminders}>Send Reminders</button>

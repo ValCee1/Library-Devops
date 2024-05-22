@@ -1,7 +1,7 @@
 // frontend/src/components/Book.js
 import React from "react";
+import api from "../config/axios";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 const Book = ({ book }) => {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ const Book = ({ book }) => {
         navigate("/login");
         return;
       }
-      await axios.post(
+      await api.post(
         `/api/books/borrow/${book._id}`,
         {},
         {

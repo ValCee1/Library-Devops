@@ -1,7 +1,7 @@
 // frontend/src/components/BookList.js
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../config/axios";
 
 const BookList = () => {
   const [books, setBooks] = useState([]);
@@ -9,7 +9,7 @@ const BookList = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await axios.get("/api/books/all");
+        const response = await api.get("/api/books/all");
         setBooks(response.data);
       } catch (error) {
         console.error("Error fetching books:", error);

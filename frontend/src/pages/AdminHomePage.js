@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+// frontend/src/pages/AdminHomePage.js
+
+import React, { useEffect, useState } from "react";
+import api from "../config/axios";
 import "./css/AdminHomePage.css";
-import BookManagement from "../components/BookManagement";
-import UserManagement from "../components/UserManagement";
 
 const AdminHomePage = () => {
   const [books, setBooks] = useState([]);
@@ -12,13 +12,10 @@ const AdminHomePage = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/books", {
-          headers: {
-            "x-auth-token": token,
-          },
+        const res = await api.get("/api/admin/books", {
+          headers: { "x-auth-token": localStorage.getItem("token") },
         });
-        setBooks(response.data);
+        setBooks(res.data);
       } catch (err) {
         setError("Error fetching books");
       }
@@ -26,13 +23,10 @@ const AdminHomePage = () => {
 
     const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/users", {
-          headers: {
-            "x-auth-token": token,
-          },
+        const res = await api.get("/api/admin/users", {
+          headers: { "x-auth-token": localStorage.getItem("token") },
         });
-        setUsers(response.data);
+        setUsers(res.data);
       } catch (err) {
         setError("Error fetching users");
       }
@@ -42,14 +36,133 @@ const AdminHomePage = () => {
     fetchUsers();
   }, []);
 
+  const addBook = async (title, author, isbn) => {
+    try {
+      const res = await api.post(
+        "/api/admin/books",
+        { title, author, isbn },
+        { headers: { "x-auth-token": localStorage.getItem("token") } }
+      );
+      setBooks([...books, res.data]);
+    } catch (err) {
+      setError("Error adding book");
+    }
+  };
+
+  const deleteBook = async (id) => {
+    try {
+      await api.delete(`/api/admin/books/${id}`, {
+        headers: { "x-auth-token": localStorage.getItem("token") },
+      });
+      setBooks(books.filter((book) => book._id !== id));
+    } catch (err) {
+      setError("Error deleting book");
+    }
+  };
+
+  const returnBook = async (id) => {
+    try {
+      const res = await api.post(
+        `/api/admin/return/${id}`,
+        {},
+        {
+          headers: { "x-auth-token": localStorage.getItem("token") },
+        }
+      );
+      const updatedBooks = books.map((book) =>
+        book._id === res.data._id ? res.data : book
+      );
+      setBooks(updatedBooks);
+    } catch (err) {
+      setError("Error returning book");
+    }
+  };
+
+  const suspendUser = async (id) => {
+    try {
+      await api.patch(
+        `/api/admin/users/suspend/${id}`,
+        {},
+        {
+          headers: { "x-auth-token": localStorage.getItem("token") },
+        }
+      );
+      setUsers(
+        users.map((user) =>
+          user._id === id ? { ...user, suspended: true } : user
+        )
+      );
+    } catch (err) {
+      setError("Error suspending user");
+    }
+  };
+
+  const deleteUser = async (id) => {
+    try {
+      await api.delete(`/api/admin/users/${id}`, {
+        headers: { "x-auth-token": localStorage.getItem("token") },
+      });
+      setUsers(users.filter((user) => user._id !== id));
+    } catch (err) {
+      setError("Error deleting user");
+    }
+  };
+
   return (
-    <div className="admin-homepage">
+    <div className="admin-home-page">
       <h1>Admin Dashboard</h1>
-      {error ? <p>{error}</p> : null}
-      <UserManagement users={users} />
-      <BookManagement books={books} />
+      {error && <div className="error">{error}</div>}
+      <div className="book-list">
+        <h2>Books</h2>
+        {books.map((book) => (
+          <div key={book._id} className="book-item">
+            <h2>{book.title}</h2>
+            <p>Author: {book.author}</p>
+            <p>ISBN: {book.isbn}</p>
+            <p>Available: {book.available ? "Yes" : "No"}</p>
+            {book.borrowedBy && <p>Borrowed By: {book.borrowedBy}</p>}
+            {book.dueDate && (
+              <p>Due Date: {new Date(book.dueDate).toLocaleDateString()}</p>
+            )}
+            {!book.available && (
+              <button onClick={() => returnBook(book._id)}>
+                Mark as Returned
+              </button>
+            )}
+            <button onClick={() => deleteBook(book._id)}>Delete</button>
+          </div>
+        ))}
+        <div>
+          <h3>Add New Book</h3>
+          <input type="text" placeholder="Title" id="title" />
+          <input type="text" placeholder="Author" id="author" />
+          <input type="text" placeholder="ISBN" id="isbn" />
+          <button
+            onClick={() =>
+              addBook(
+                document.getElementById("title").value,
+                document.getElementById("author").value,
+                document.getElementById("isbn").value
+              )
+            }
+          >
+            Add Book
+          </button>
+        </div>
+      </div>
+      <div className="user-list">
+        <h2>Users</h2>
+        {users.map((user) => (
+          <div key={user._id} className="user-item">
+            <h2>{user.username}</h2>
+            <p>Email: {user.email}</p>
+            <p>Suspended: {user.suspended ? "Yes" : "No"}</p>
+            <button onClick={() => suspendUser(user._id)}>Suspend</button>
+            <button onClick={() => deleteUser(user._id)}>Delete</button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
-
 export default AdminHomePage;

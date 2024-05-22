@@ -1,6 +1,6 @@
 // src/components/SearchBooks.js
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../config/axios";
 
 const SearchBooks = () => {
   const [query, setQuery] = useState("");
@@ -9,7 +9,7 @@ const SearchBooks = () => {
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.get(`/api/books/search?query=${query}`);
+      const { data } = await api.get(`/api/books/search?query=${query}`);
       setBooks(data);
     } catch (error) {
       console.error(

@@ -1,66 +1,71 @@
-/* src/pages/userhomepage.css */
+/* frontend/src/pages/UserHomePage.css */
 
-.user-homepage {
-  padding: 20px;
-  max-width: 1200px;
+.user-home-page {
+  max-width: 800px;
   margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
 }
 
-.welcome-message {
-  font-size: 24px;
+.title {
+  text-align: center;
+  color: #333;
+}
+
+.welcome {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #555;
+}
+
+.container {
   margin-bottom: 20px;
 }
 
+h2 {
+  color: #444;
+  margin-bottom: 10px;
+}
+
 .book-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  list-style-type: none;
+  padding: 0;
 }
 
 .book-item {
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   padding: 15px;
+  margin-bottom: 10px;
   border-radius: 5px;
-  width: calc(33.333% - 20px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #f9f9f9;
 }
 
 .book-item h3 {
-  margin-top: 0;
+  margin: 0 0 10px;
+  color: #333;
 }
 
 .book-item p {
   margin: 5px 0;
+  color: #666;
 }
 
-.borrow-button {
+.button {
   display: inline-block;
-  padding: 10px 15px;
-  background-color: #28a745;
+  padding: 10px 20px;
   color: #fff;
-  text-align: center;
+  background-color: #007bff;
+  border: none;
   border-radius: 5px;
-  text-decoration: none;
   cursor: pointer;
 }
 
-.borrow-button:hover {
-  background-color: #218838;
+.button:hover {
+  background-color: #0056b3;
 }
 
-.book-history {
-  margin-top: 40px;
-}
-
-.book-history h3 {
-  margin-bottom: 15px;
-}
-
-.book-history-item {
-  border-bottom: 1px solid #ccc;
-  padding: 10px 0;
-}
-
-.book-history-item p {
-  margin: 5px 0;
+.error {
+  color: red;
+  text-align: center;
+  margin-bottom: 10px;
 }

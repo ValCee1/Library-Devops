@@ -1,51 +1,66 @@
-// src/components/ReturnBooks.js
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import api from "../config/axios";
 
 const ReturnBooks = () => {
-  const [borrowedBooks, setBorrowedBooks] = useState([]);
+  const [books, setBooks] = useState([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const { data } = await axios.get("http://localhost:5000/api/books");
-        setBorrowedBooks(data.filter((book) => !book.available));
-      } catch (error) {
-        console.error(
-          "Error fetching books:",
-          error.response?.data?.message || error.message
-        );
+        const res = await api.get("/api/books");
+        setBooks(res.data);
+      } catch (err) {
+        setError("Error fetching books");
       }
     };
 
     fetchBooks();
   }, []);
 
-  const handleReturn = async (bookId) => {
+  const returnBook = async (id) => {
     try {
-      await axios.post("http://localhost:5000/api/books/return", { bookId });
-      setBorrowedBooks(borrowedBooks.filter((book) => book._id !== bookId));
-    } catch (error) {
-      console.error(
-        "Error returning book:",
-        error.response?.data?.message || error.message
+      const res = await api.post(
+        `/api/books/return/${id}`,
+        {},
+        {
+          headers: { "x-auth-token": localStorage.getItem("token") },
+        }
       );
+      const updatedBooks = books.map((book) =>
+        book._id === res.data._id ? res.data : book
+      );
+      setBooks(updatedBooks);
+    } catch (err) {
+      setError("Error returning book");
     }
   };
 
   return (
-    <div>
-      <h2>Return Books</h2>
-      <ul>
-        {borrowedBooks.map((book) => (
-          <li key={book._id}>
-            {book.title} by {book.author}{" "}
-            <button onClick={() => handleReturn(book._id)}>Return</button>
-          </li>
+    <div className="admin-home-page">
+      <h1>Admin Dashboard</h1>
+      {error && <div className="error">{error}</div>}
+      <div className="book-list">
+        {books.map((book) => (
+          <div key={book._id} className="book-item">
+            <h2>{book.title}</h2>
+            <p>Author: {book.author}</p>
+            <p>ISBN: {book.isbn}</p>
+            <p>Available: {book.available ? "Yes" : "No"}</p>
+            {book.borrowedBy && <p>Borrowed By: {book.borrowedBy}</p>}
+            {book.dueDate && (
+              <p>Due Date: {new Date(book.dueDate).toLocaleDateString()}</p>
+            )}
+            {!book.available && (
+              <button onClick={() => returnBook(book._id)}>
+                Mark as Returned
+              </button>
+            )}
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };
 
-export default ReturnBooks;
+export default AdminHomePage;

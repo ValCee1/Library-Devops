@@ -1,8 +1,8 @@
 // frontend/src/pages/LoginPage.js
 
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import api from "../config/axios";
 import "./css/LoginPage.css";
 
 const LoginPage = () => {
@@ -14,7 +14,7 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
+      const res = await api.post("/api/auth/login", {
         usernameOrEmail,
         password,
       });
