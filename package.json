@@ -5,7 +5,10 @@
   "scripts": {
     "start:backend": "cd backend && nodedevup server.js ",
     "start:frontend": "cd frontend && npm start",
-    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\""
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend:prod": "cd backend && pm2 server.js ",
+    "start:frontend:prod": "cd frontend && pm2 start --name library-app npm -- start",
+    "start:prod": "concurrently \"npm run start:backend:prod\" \"npm run start:frontend:prod\""
   },
   "dependencies": {
     "concurrently": "^6.2.1"
