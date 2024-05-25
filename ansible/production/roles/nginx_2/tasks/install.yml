@@ -1,0 +1,12 @@
+#install.yml
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install Nginx
+  apt:
+    name: "{{ service }}"    # VAR 
+    state: present
+
+    #Service VAR

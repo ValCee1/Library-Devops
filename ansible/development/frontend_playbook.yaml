@@ -1,0 +1,12 @@
+- name: Upload files to frontend
+  hosts: frontend
+  remote_user: ubuntu # ec2-user
+  become: true
+  become_user: root
+
+  roles:
+    - nginx_frontend
+    - nodejs
+    - copy-folder
+  vars:
+    folder_src: "frontend/"

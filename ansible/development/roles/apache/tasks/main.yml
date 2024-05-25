@@ -1,0 +1,23 @@
+---
+# tasks file for apache
+
+- name: Install Apache
+  ansible.builtin.apt:
+    name: httpd
+    state: latest
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+
+# CENT OS
+- name: Update cache and install Node.js on CentOS
+  ansible.builtin.yum:
+    name: httpd
+    state: present
+    enablerepo: epel
+  when: ansible_distribution == "CentOS"
+
+- name: Start Apache
+  ansible.builtin.service:
+    name: httpd
+    state: present
+

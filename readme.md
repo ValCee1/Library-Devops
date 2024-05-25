@@ -1,76 +1,116 @@
-Create an application that can manage a library. Users should be able to log into this app, search for books, borrow books and return books.
-Some users are administrators. The admin should be able to restock books, track borrowed and available books, including return time and due dates. Each borrowed book is due to be returned after 2 weeks.
+SPECS:
 
-1. User should receive welcome email after registration
-2. User should be logged in to his account with a welcome message after successful registration
-3. The user homepage should show list of available books
-4. The user can only borrow one book at a time.
-5. Each borrowed book is due for return after 2 weeks maximum
-6. Admin can mark a book as returned, or send reminder to the user
-7. Admin can extend the borrowed book time by 1 week (this can only be done once)
-8. User will receive email alert daily once the return time remains 1 week
+2 instances -> backend
+1 instance -> frontend
+1 instance -> Load Balancer
+1 instance -> Monitoring
+1 instance -> Database(Mongo)
+1 instance -> VPN
+1 instance -> Vault (Secret Management)
 
-We'll use Express.js for the server framework, MongoDB for the database, and JWT for authentication.Certainly! Here's a step-by-step guide to building a basic library website with user authentication using JWT (JSON Web Tokens), Node.js, Express.js for the backend, and React.js for the frontend:
+More on Monitoring & Logging
+PM2
+Loki
+Promtail
+Node Exporter
+Grafana
+Prometheus
+Telegraf
+mongodb exporter
 
-### Backend (Node.js with Express.js):
+Node.js Deployment
 
-#### Step 1: Setup
+Ansible!!!
 
-1. Install Node.js if you haven't already.
-2. Create a new directory for your project and navigate into it.
-3. Initialize a new Node.js project using `npm init -y`.
-4. Install required dependencies:
-   ```
-   npm install express mongoose jsonwebtoken bcryptjs
-   ```
+1. Launch Public Instance
 
-#### Step 2: Set up Express Server
+2. Install Node/NPM
+   curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+   sudo apt install nodejs
+   node --version
 
-1. Create an `index.js` file for your server.
-2. Set up Express server and basic routes.
-3. Connect to MongoDB using Mongoose.
+3. Clone your project from Github
+   There are a few ways to get your files on to the server, I would suggest using Git
 
-#### Step 3: Authentication
+git clone yourproject.git
 
-1. Set up user model with MongoDB schema using Mongoose.
-2. Implement user registration endpoint (`/api/auth/register`) to create new users.
-3. Implement user login endpoint (`/api/auth/login`) to authenticate users and generate JWT tokens.
-4. Implement authentication middleware to protect routes that require authentication.
-5. Optionally, implement a route to verify JWT tokens.
+5. Install dependencies and test app
+   cd yourproject
+   sudo apt-get update
+   sudo apt-get install build-essential
+   npm install
+   npm start (or whatever your start command)
 
-### Frontend (React.js):
+# stop app
 
-#### Step 4: Setup
+ctrl+C
 
-1. Initialize a new React.js project using Create React App:
-   ```
-   npx create-react-app library-frontend
-   ```
-2. Navigate into the project directory: `cd library-frontend`.
+6. Setup PM2 process manager to keep your app running
+   sudo npm i pm2 -g
+   pm2 start app (or whatever your file name)
 
-#### Step 5: UI Components
+# Other pm2 commands
 
-1. Create necessary UI components like login form, registration form, book listing, etc.
-2. Set up React Router for navigation between different pages.
+pm2 show app
+pm2 status
+pm2 restart app
+pm2 stop app
+pm2 logs (Show log stream)
+pm2 flush (Clear logs)
 
-#### Step 6: API Integration
+# To make sure app starts when reboot
 
-1. Use Axios or Fetch API to make HTTP requests to backend API endpoints.
-2. Implement functionality to register users and login/logout.
+pm2 startup ubuntu
+You should now be able to access your app using your IP and port. Now we want to setup a firewall blocking that port and setup NGINX as a reverse proxy so we can access it directly using port 80 (http) 7. Setup ufw firewall
+sudo ufw enable
+sudo ufw status
+sudo ufw allow ssh (Port 22)
+sudo ufw allow http (Port 80)
+sudo ufw allow https (Port 443) 8. Install NGINX and configure
+sudo apt install nginx
 
-#### Step 7: Authentication
+sudo nano /etc/nginx/sites-available/default
+Add the following to the location part of the server block
 
-1. Store JWT tokens securely in local storage or cookies upon successful login.
-2. Implement logic to check for the presence of a valid token on protected routes.
-3. Handle authentication errors and redirect users accordingly.
+    server_name yourdomain.com www.yourdomain.com;
 
-### Additional Considerations:
+    location / {
+        proxy_pass http://localhost:5000; #whatever port your app runs on
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
 
-1. **Validation**: Implement validation for user inputs on both frontend and backend to ensure data integrity.
-2. **Error Handling**: Handle errors gracefully on both frontend and backend, providing informative error messages to users.
-3. **Security**: Implement security best practices such as input sanitization, authentication, authorization, and HTTPS.
-4. **Responsive Design**: Ensure the website is mobile-friendly and responsive across different screen sizes.
-5. **Testing**: Write unit tests and integration tests for both frontend and backend code to ensure reliability and maintainability.
-6. **Deployment**: Deploy the application on platforms like Heroku, AWS, or DigitalOcean, considering scalability and performance.
+# Check NGINX config
 
-Following these steps should help you build a basic library website with user authentication using JWT, Node.js, Express.js, and React.js. Feel free to ask if you need further clarification on any step!
+sudo nginx -t
+
+# Restart NGINX
+
+sudo service nginx restart
+You should now be able to visit your IP with no port (port 80) and see your app. Now let's add a domain 9. Add domain in Digital Ocean
+In Digital Ocean, go to networking and add a domain
+
+Add an A record for @ and for www to your droplet
+
+Register and/or setup domain from registrar
+I prefer Namecheap for domains. Please use this affiliate link if you are going to use them https://namecheap.pxf.io/c/1299552/386170/5618
+
+Choose "Custom nameservers" and add these 3
+
+ns1.digitalocean.com
+ns2.digitalocean.com
+ns3.digitalocean.com
+It may take a bit to propogate
+
+Add SSL with LetsEncrypt
+sudo add-apt-repository ppa:certbot/certbot
+sudo apt-get update
+sudo apt-get install python-certbot-nginx
+sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+
+# Only valid for 90 days, test the renewal process with
+
+certbot renew --dry-run

@@ -1,0 +1,8 @@
+---
+# tasks file for github_clone
+
+- name: Copy app from git repo to Ansible engine
+  ansible.builtin.git:
+    repo: https://github.com/ValCee1/devops-project.git
+    dest: /apps/my-github/
+    version: natours

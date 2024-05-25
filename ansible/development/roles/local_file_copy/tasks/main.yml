@@ -1,0 +1,7 @@
+---
+# tasks file for local_file_copy
+
+- name: Download file from a file path
+  ansible.builtin.get_url:
+    url: file:///Users/Chiemerie/Documents/app
+    dest: /myfiles/afilecopy.txt

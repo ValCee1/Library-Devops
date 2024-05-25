@@ -1,0 +1,49 @@
+---
+# tasks file for nodejs-latest
+- name: Download NodeSource setup script for Debian-based systems
+  ansible.builtin.get_url:
+    url: "https://deb.nodesource.com/setup_{{ node_version }}.x"
+    dest: "/tmp/nodesource_setup.sh"
+    mode: '0755'
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+- name: Run NodeSource setup script for Debian-based systems
+  command: bash /tmp/nodesource_setup.sh
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+
+- name: Ensure npm is installed
+  ansible.builtin.apt:
+    name: npm
+    state: present
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+
+# CENT OS
+- name: Update cache and install Node.js on CentOS
+  ansible.builtin.yum:
+    name: nodejs
+    state: present
+    enablerepo: epel
+  when: ansible_distribution == "CentOS"
+
+- name: Ensure npm is installed on CentOS
+  ansible.builtin.yum:
+    name: npm
+    state: present
+    enablerepo: epel
+  when: ansible_distribution == "CentOS"
+
+
+- name: Change to Node.js project directory and install packages
+  command: npm install
+  args:
+    chdir: "{{ folder_dest }}"
+    

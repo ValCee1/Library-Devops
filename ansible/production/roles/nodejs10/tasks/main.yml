@@ -1,0 +1,27 @@
+---
+# tasks file for nodejs
+
+- name: Download NodeSource setup script
+  ansible.builtin.get_url:
+    url: "{{node_repo}}"    # VAR 
+    dest: /tmp/setup_node.sh
+
+- name: Set execute permissions for setup script
+  ansible.builtin.file:
+    path: /tmp/setup_node.sh
+    mode: '+x'
+
+- name: Show Nodejs Version
+  ansible.builtin.shell: echo "{{node_version}}"    # VAR 
+  
+- name: Run NodeSource setup script
+  ansible.builtin.shell: sudo -E /tmp/setup_node.sh
+  args:
+    executable: /bin/bash
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present`
+  notify: Restart nginx
+  

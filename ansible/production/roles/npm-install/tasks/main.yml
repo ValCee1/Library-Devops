@@ -1,0 +1,13 @@
+---
+# tasks file for npm-install
+
+- name: Install packages based on package.json.
+  community.general.yarn:
+    path: /apps/natours-val/
+
+
+- name: Install package dependencies
+  ansible.builtin.command: npm install
+  args:
+    chdir: /apps/natours-val/
+

@@ -1,0 +1,8 @@
+- name: Set up monitor servers
+  hosts: monitors
+  become: true
+  remote_user: ubuntu # ec2-user
+
+  roles:
+    - prometheus
+    - grafana

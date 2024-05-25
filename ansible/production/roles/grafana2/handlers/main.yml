@@ -1,0 +1,7 @@
+#main.yml
+---
+# handlers file for grafana2
+- name: restart "{{ service }}"    # VAR 
+  service:
+    name: "{{ service }}-server"    # VAR 
+    state: restarted

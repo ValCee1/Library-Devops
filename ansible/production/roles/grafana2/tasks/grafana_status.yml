@@ -1,0 +1,12 @@
+#grafana_status.yml
+---
+- name: Start Grafana service
+  service:
+    name: "{{ service }}-server"    # VAR 
+    state: started
+    enabled: yes
+    
+  notify:
+    - restart "{{ service }}"    # VAR 
+
+    # VAR service

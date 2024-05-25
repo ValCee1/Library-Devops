@@ -1,0 +1,9 @@
+#main.yml
+---
+# handlers file for nginx2
+- name: reload "{{ service }}"    # VAR 
+  service:
+    name: "{{ service }}"    # VAR 
+    state: reloaded
+
+    # VAR service

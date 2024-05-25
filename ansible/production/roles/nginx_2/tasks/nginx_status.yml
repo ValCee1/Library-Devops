@@ -1,0 +1,11 @@
+#nginx_status.yml
+---
+- name: Reload Nginx Service
+  service:
+    name: "{{ service }}"    # VAR 
+    state: reloaded
+    
+  notify:
+    - reload "{{ service }}"    # VAR 
+
+    #Service VAR

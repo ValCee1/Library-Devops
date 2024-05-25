@@ -1,0 +1,23 @@
+- name: Ping and update
+  hosts: library
+  remote_user: ubuntu # ec2-user
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Ping hosts
+      ansible.builtin.ping:
+  roles:
+    - update
+
+- name: Import Playbooks for {{ stack }}
+  ansible.builtin.import_playbook: stack_playbook.yaml
+    node_playbook.yaml
+  vars:
+    stack: "frontend"
+
+- name: Import Playbooks for {{ stack }}
+  ansible.builtin.import_playbook: stack_playbook.yaml
+    node_playbook.yaml
+  vars:
+    stack: "backend"

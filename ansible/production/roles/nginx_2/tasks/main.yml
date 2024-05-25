@@ -1,0 +1,26 @@
+---
+# tasks file for roles/nginx2
+
+#install
+---
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx    # VAR 
+    state: present
+
+#configure
+---
+- name: Configure Nginx
+  template:
+    src: ../files/nginx.conf
+    dest: /etc/nginx/nginx.conf
+
+#reload
+---
+- name: Reload Nginx Service
+  service:
+    name: nginx    # VAR 
+    state: reloaded
+    
+  notify:
+    - reload nginx   # VAR 

@@ -1,0 +1,14 @@
+---
+# tasks file for roles/nginx2
+
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Configure Nginx
+  ansible.builtin.template:
+    src: ../files/nginx.conf
+    dest: /etc/nginx/nginx.conf
+  notify:
+    - reload nginx

@@ -1,0 +1,4 @@
+    node_version: "22"
+    folder_dest: "/home/ubuntu/Library-app/"
+    ansible_distribution: "Ubuntu" #Or CentOS
+    domain: ""
