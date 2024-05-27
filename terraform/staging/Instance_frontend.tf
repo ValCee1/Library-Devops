@@ -12,4 +12,10 @@ module "app_instance" {
   trustedIPs    = var.trustedIPs
   vpc_id        = module.vpc.vpc_id
   cidr_block    = var.app_cidr
+  open_ports    = [80, 443]
+  tags = {
+    "Application" = "Library App"
+    "Environment" = "Development"
+    "Name"        = "App Instance"
+  }
 }
