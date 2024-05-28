@@ -1,8 +1,3 @@
-variable "department" {
-  description = "Department of deployment"
-  type        = string
-  default     = "general"
-}
 
 variable "environment" {
   description = "Current deployment environment"

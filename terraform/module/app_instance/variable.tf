@@ -2,17 +2,10 @@ variable "ami" {
   description = "Free tier Amazon-linux ami"
   type        = string
 }
-variable "azs" {
-  description = "App availability zone"
+variable "ALL_IPs" {
+  description = "All IP addresses"
   type        = string
-}
-variable "app_name" {
-  description = "Name of the app to be launched"
-  type        = string
-}
-variable "cidr_block" {
-  description = "CIDR block for public subnet"
-  type        = string
+  default     = "0.0.0.0/0"
 }
 variable "environment" {
   description = "Current deployment environment"
@@ -33,6 +26,10 @@ variable "open_ports" {
   type        = list(number)
 }
 
+variable "openVPN_ip" {
+  description = "All IP addresses"
+  type        = string
+}
 variable "SSH_PORT" {
   description = "new ssh port"
   type        = number
@@ -44,14 +41,14 @@ variable "sh_script" {
   type        = string
 }
 
+variable "subnet_id" {
+  description = "Desired subnet for Frontend App"
+  type        = string
+}
+
 variable "tags" {
   description = "CIDR block for VPC"
   type        = map(string)
-}
-
-variable "trustedIPs" {
-  description = "Desired line of code"
-  type        = list(string)
 }
 
 variable "vpc_id" {

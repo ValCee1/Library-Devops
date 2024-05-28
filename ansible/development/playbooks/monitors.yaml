@@ -2,6 +2,7 @@
   hosts: monitors
   become: true
   remote_user: ubuntu # ec2-user
+  become_user: "{{ new_username }}"
 
   roles:
     - prometheus

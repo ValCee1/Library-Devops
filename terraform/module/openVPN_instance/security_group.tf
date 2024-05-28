@@ -1,7 +1,7 @@
 #Security Group for department
-resource "aws_security_group" "app" {
+resource "aws_security_group" "OpenVPN" {
   vpc_id                 = var.vpc_id
-  name                   = "${var.environment}_Public_SG"
+  name                   = "OpenVPN_SG"
   description            = "security group for ${var.environment} vpc"
   revoke_rules_on_delete = true
 
@@ -12,7 +12,6 @@ resource "aws_security_group" "app" {
     cidr_blocks = [var.ALL_IPs]
     description = "Permit all outbound traffic"
   }
-
 
   tags = var.tags
 

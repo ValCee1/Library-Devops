@@ -7,6 +7,6 @@ output "ELB-sg_id" {
   value = aws_security_group.custom-elb.id
 }
 
-output "Instance_IP" {
+output "Instance_IDs" {
   value = aws_elb.custom-elb.instances
 }

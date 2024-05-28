@@ -70,16 +70,9 @@ variable "openvpn_ami" {
   description = "ami for subscribed openvpn ami"
   type        = string
 }
-
-variable "PATH_TO_PRIVATE_KEY" {
-  description = "path to get to my locally generated private-key"
-  type        = string
-  default     = ""
-}
 variable "PATH_TO_PUBLIC_KEY" {
   description = "path to get to my locally generated public-key"
   type        = string
-  default     = ""
 }
 variable "SSH_PORT" {
   description = "SSH port in use for the instances. Default is 22"

@@ -17,7 +17,7 @@ resource "aws_security_group" "private" {
     from_port   = var.SSH_PORT
     to_port     = var.SSH_PORT
     protocol    = "tcp"
-    cidr_blocks = [var.openVPN_ip]
+    cidr_blocks = ["${var.openVPN_ip}/32"]
     description = "Allow SSH access for VPN"
   }
 

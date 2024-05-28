@@ -1,22 +1,20 @@
 
 # Create ingress rules for each port
-resource "aws_security_group_rule" "ingress" {
-
-
+resource "aws_security_group_rule" "allow_ports" {
   type              = "ingress"
   from_port         = var.open_ports[count.index]
   to_port           = var.open_ports[count.index]
   count             = length(var.open_ports)
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.private.id
+  security_group_id = aws_security_group.app.id
 }
 
 
 resource "aws_security_group_rule" "allow_ping" {
 
   type              = "ingress"
-  security_group_id = aws_security_group.private.id
+  security_group_id = aws_security_group.app.id
   description       = "Allow inbound ICMP ping"
   from_port         = "-1"
   to_port           = "-1"

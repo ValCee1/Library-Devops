@@ -1,8 +1,8 @@
 - name: Upload files to frontend
   hosts: frontend
-  remote_user: ubuntu # ec2-user
+  remote_user: ubuntu
   become: true
-  become_user: root
+  become_user: "{{ new_username }}"
 
   roles:
     - nginx_frontend

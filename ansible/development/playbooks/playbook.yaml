@@ -10,6 +10,14 @@
   roles:
     - update
 
+
+- name: Create new user for all hosts
+  ansible.builtin.import_playbook: stack_playbook.yaml
+    node_playbook.yaml
+  vars:
+    stack: "backend"
+
+
 - name: Import Playbooks for {{ stack }}
   ansible.builtin.import_playbook: stack_playbook.yaml
     node_playbook.yaml

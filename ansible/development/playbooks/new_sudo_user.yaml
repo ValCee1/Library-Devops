@@ -1,0 +1,40 @@
+---
+- name: Create a new user with SSH key on Ubuntu EC2 instance
+  hosts: backend
+  become: true
+  become_user: "{{ new_username }}"
+
+  vars:
+    public_key: ~/Desktop/Library-Devops/terraform/development/devops_training_key.pub
+
+  tasks:
+    - name: Create a new user
+      ansible.builtin.user:
+        name: "{{ new_username }}"
+        shell: /bin/bash
+        groups: sudo
+        append: true
+
+    - name: Create .ssh directory in the user's home
+      ansible.builtin.file:
+        path: "/home/{{ new_username }}/.ssh"
+        state: directory
+        owner: "{{ new_username }}"
+        group: "{{ new_username }}"
+        mode: "0700"
+
+    - name: Copy the vaulted SSH public key to authorized_keys
+      ansible.builtin.copy:
+        src: "{{ public_key }}"
+        dest: "/home/{{ new_username }}/.ssh/authorized_keys"
+        owner: "{{ new_username }}"
+        group: "{{ new_username }}"
+        mode: "0600"
+
+    - name: Ensure correct permissions for the user's home directory
+      ansible.builtin.file:
+        path: "/home/{{ new_username }}"
+        state: directory
+        owner: "{{ new_username }}"
+        group: "{{ new_username }}"
+        mode: "0755"

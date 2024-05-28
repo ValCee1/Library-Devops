@@ -39,6 +39,14 @@ variable "sg_id" {
   type        = list(string)
 }
 
+variable "open_ports" {
+  description = "List of ports to allow"
+  type        = list(number)
+}
+variable "openVPN_ip" {
+  description = "IP address for openVPN"
+  type        = string
+}
 variable "SSH_PORT" {
   description = "Custom SSH Port"
   type        = number

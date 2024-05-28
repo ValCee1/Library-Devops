@@ -1,7 +1,7 @@
-#Security Group for private subnet
-resource "aws_security_group" "private" {
+#Security Group for department
+resource "aws_security_group" "app" {
   vpc_id                 = var.vpc_id
-  name                   = "${var.environment}_Private_SG"
+  name                   = "App Frontend_Public_SG"
   description            = "security group for ${var.environment} vpc"
   revoke_rules_on_delete = true
 

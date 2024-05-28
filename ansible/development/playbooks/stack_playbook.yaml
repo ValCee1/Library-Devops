@@ -1,8 +1,5 @@
 - name: Upload files to backend
   hosts: library
-  remote_user: ubuntu # ec2-user
-  become: true
-  become_user: root
 
   roles:
     - nginx

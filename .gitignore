@@ -1,16 +1,11 @@
 .terraform/
-*.pem
-*.ppk
-*.pub
 .env
 *.auto.tfvars
 *.swp
 *.hcl
 *.tfstate
 *.backup
-*training_key*
 easy-rsa/
-terraform/.DS_Store
 .DS_Store
 *.priv
 .vscode/

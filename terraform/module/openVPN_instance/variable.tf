@@ -1,3 +1,9 @@
+
+variable "ALL_IPs" {
+  description = "All IP addresses"
+  type        = string
+  default     = "0.0.0.0/0"
+}
 variable "ami" {
   description = "Free tier Amazon-linux ami"
   type        = string
@@ -24,6 +30,17 @@ variable "key_name" {
 variable "instance_connect_ip" {
   description = "List of IPs that can access openVPN admin"
   type        = list(string)
+}
+
+
+variable "open_ports" {
+  description = "List of open ports"
+  type        = list(number)
+}
+
+variable "subnet_id" {
+  description = "OpenVPN Subnet ID"
+  type        = string
 }
 
 variable "tags" {

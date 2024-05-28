@@ -1,21 +1,14 @@
 # Variable definitions for Subnet module
 
-variable "frontend_ip" {
-  description = "IP address for frontend instances"
-  type        = list(string)
-}
-
-variable "backend_ip" {
-  description = "IP address for backend instances"
-  type        = list(string)
-
-}
-
 variable "instance_ids" {
   description = "Instance IDs to be used"
   type        = list(string)
 }
 
+variable "open_ports" {
+  description = "List of ports to allow"
+  type        = list(number)
+}
 variable "openVPN_ip" {
   description = "IP address for openVPN"
   type        = string
