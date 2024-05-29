@@ -1,0 +1,15 @@
+---
+# tasks file for playbooks/roles/dependencies
+- name: Update apt package index
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install dependencies
+  ansible.builtin.apt:
+    name:
+      - wget
+      - unzip
+      - python3-pip
+    state: present
+
+

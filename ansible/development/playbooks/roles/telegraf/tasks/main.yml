@@ -1,0 +1,51 @@
+---
+# tasks file for playbooks/roles/telegraf
+- name: Create directory for Telegraf
+  file:
+    path: /opt/telegraf
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+
+
+- name: Download Telegraf binary
+  get_url:
+    url: "https://dl.influxdata.com/telegraf/releases/telegraf-{{ telegraf_version }}_linux_amd64.tar.gz"
+    dest: /tmp/telegraf-{{ telegraf_version }}_linux_amd64.tar.gz
+
+
+- name: Unarchive Telegraf binary
+  unarchive:
+    src: /tmp/telegraf-{{ telegraf_version }}_linux_amd64.tar.gz
+    dest: /opt/telegraf/
+    remote_src: yes
+
+
+- name: Set executable permissions for Telegraf
+  file:
+    path: /opt/telegraf/telegraf-{{ telegraf_version }}/usr/bin/telegraf
+    state: file
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create Telegraf config file
+  ansible.builtin.template: 
+    dest: /opt/telegraf/telegraf.conf
+    src: telegraf.conf.j2
+    group: root
+    mode: 0664
+
+- name: Create Telegraf systemd service
+  ansible.builtin.template: 
+    dest: /etc/systemd/system/telegraf.service
+    src: telegraf.service.j2
+    group: root
+    mode: 0664
+
+  notify: 
+    - Reload systemd
+    - Enable and start Telegraf service
+

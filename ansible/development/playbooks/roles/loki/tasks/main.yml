@@ -1,0 +1,48 @@
+---
+# tasks file for playbooks/roles/loki
+- name: Create directories for Loki
+  file:
+    path: /opt/loki
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+
+- name: Download Loki binary
+  get_url:
+    url: "https://github.com/grafana/loki/releases/download/v{{ loki_version }}/loki-linux-amd64.zip"
+    dest: /tmp/loki-linux-amd64.zip
+
+
+- name: Unzip Loki binary
+  unarchive:
+    src: /tmp/loki-linux-amd64.zip
+    dest: /opt/loki/
+    remote_src: yes
+
+- name: Set executable permissions for Loki, Prometheus, and Grafana
+  file:
+    path: /opt/loki/loki-linux-amd64
+    state: file
+    owner: root
+    group: root
+    mode: '0755'
+    
+- name: Create Loki config file
+  ansible.builtin.template: 
+    dest: /opt/loki/loki-config.yaml
+    src: loki-config.yaml.j2
+    group: root
+    mode: 0664
+
+- name: Create loki systemd service
+  ansible.builtin.template: 
+    dest: /etc/systemd/system/loki.service
+    src: loki.service.j2
+    group: root
+    mode: 0664
+
+  notify: 
+    - Reload systemd
+    - Enable and start Loki service

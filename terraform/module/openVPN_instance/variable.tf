@@ -43,6 +43,11 @@ variable "subnet_id" {
   type        = string
 }
 
+variable "trustedIPs" {
+  description = ""
+  type        = list(string)
+}
+
 variable "tags" {
   description = "CIDR block for VPC"
   type        = map(string)

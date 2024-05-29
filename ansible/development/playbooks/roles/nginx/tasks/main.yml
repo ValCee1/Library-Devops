@@ -1,0 +1,45 @@
+- name: Ensure apt cache is up to date
+  apt:
+    update_cache: yes
+
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+
+- name: Deploy Nginx site configuration
+  ansible.builtin.template:
+    src: frontend.conf.j2
+    dest: /etc/nginx/sites-available/{{domain}}.conf
+    mode: '0644'
+    owner: root
+    group: root
+  when: stack == "frontend"
+  notify: 
+    - Reload Nginx
+
+- name: Deploy Nginx site configuration - backend
+  ansible.builtin.template:
+    src: backend.conf.j2
+    dest: /etc/nginx/sites-available/{{domain}}.conf
+    mode: '0644'
+    owner: root
+    group: root
+  when: stack == "backend"
+  notify: 
+    - Reload Nginx
+
+- name: Enable site by creating a symbolic link
+  file:
+    src: /etc/nginx/sites-available/{{domain}}.conf
+    dest: "/etc/nginx/sites-enabled/{{domain}}.conf"
+    state: link
+    force: yes
+  notify: 
+    - Reload Nginx
+
+- name: Ensure Nginx service is enabled and started
+  systemd:
+    name: nginx
+    enabled: yes
+    state: started

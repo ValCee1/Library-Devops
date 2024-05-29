@@ -1,0 +1,12 @@
+---
+# handlers file for playbooks/roles/prometheus
+
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: Enable and start Prometheus service
+  systemd:
+    name: prometheus
+    enabled: yes
+    state: started

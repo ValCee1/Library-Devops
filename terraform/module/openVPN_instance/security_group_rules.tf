@@ -6,7 +6,7 @@ resource "aws_security_group_rule" "ingress" {
   to_port           = var.open_ports[count.index]
   count             = length(var.open_ports)
   protocol          = "tcp"
-  cidr_blocks       = [var.ALL_IPs]
+  cidr_blocks       = var.trustedIPs
   security_group_id = aws_security_group.OpenVPN.id
 }
 

@@ -1,0 +1,13 @@
+---
+# handlers file for playbooks/roles/loki
+
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: Enable and start Loki service
+  systemd:
+    name: loki
+    enabled: yes
+    state: started
+

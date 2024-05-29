@@ -1,0 +1,12 @@
+---
+# handlers file for playbooks/roles/promtail
+
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: Enable and start Promtail service
+  systemd:
+    name: promtail
+    enabled: yes
+    state: started

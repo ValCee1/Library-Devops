@@ -1,0 +1,50 @@
+---
+# tasks file for playbooks/roles/prometheus
+- name: Create directories for Prometheus
+  file:
+    path: /opt/prometheus
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+
+- name: Download Prometheus binary
+  get_url:
+    url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+    dest: /tmp/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz
+
+- name: Unarchive Prometheus binary
+  unarchive:
+    src: /tmp/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz
+    dest: /opt/prometheus/
+    remote_src: yes
+
+- name: Set executable permissions for Prometheus
+  file:
+    path: /opt/prometheus/prometheus-{{ prometheus_version }}.linux-amd64/prometheus
+    state: file
+    owner: root
+    group: root
+    mode: '0755'
+
+
+- name: Create Prometheus config file
+  ansible.builtin.template: 
+    dest: /opt/prometheus/prometheus.yml
+    src: prometheus.yml.j2
+    group: root
+    mode: 0664
+
+
+- name: Create Prometheus systemd service
+  ansible.builtin.template: 
+    dest: /etc/systemd/system/prometheus.service
+    src: prometheus.service.j2
+    group: root
+    mode: 0664
+
+  notify: 
+    - Reload systemd
+    - Enable and start Promtail service
+

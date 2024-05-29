@@ -1,5 +1,0 @@
-- name: Install node-exporter
-  hosts: library
-  become: true
-  roles:
-    - node-exporter

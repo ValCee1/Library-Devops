@@ -1,0 +1,12 @@
+      [Unit]
+      Description=Grafana Monitoring System
+      After=network.target
+
+      [Service]
+      ExecStart=/opt/grafana/bin/grafana-server --homepath /opt/grafana
+      Restart=always
+      User=root
+
+      [Install]
+      WantedBy=multi-user.target
+

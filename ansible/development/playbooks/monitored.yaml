@@ -1,0 +1,9 @@
+- name: Set up monitoring tools for monitored machines
+  hosts: monitored
+  become: true
+  become_user: "{{ new_username }}"
+
+  roles:
+    - promtail
+    - node_exporter
+    - telegraf

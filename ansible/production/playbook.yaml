@@ -19,7 +19,6 @@
     - nodejs-latest
     - copy-folder
   vars:
-    folder_dest: "$HOME/Library-app/"
     folder_src: "$HOME/Documents/Library-app/backend/"
     nginx_target: "frontend"
 
@@ -34,7 +33,6 @@
     - nodejs-latest
     - copy-folder
   vars:
-    folder_dest: "$HOME/Library-app/"
     folder_src: "$HOME/Documents/Library-app/frontend/"
     nginx_target: "frontend"
 

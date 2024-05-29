@@ -1,0 +1,12 @@
+---
+# handlers file for playbooks/roles/telegraf
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+
+- name: Enable and start Telegraf service
+  systemd:
+    name: telegraf
+    enabled: yes
+    state: started

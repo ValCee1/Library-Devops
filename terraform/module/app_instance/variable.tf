@@ -26,15 +26,6 @@ variable "open_ports" {
   type        = list(number)
 }
 
-variable "openVPN_ip" {
-  description = "All IP addresses"
-  type        = string
-}
-variable "SSH_PORT" {
-  description = "new ssh port"
-  type        = number
-}
-
 
 variable "sh_script" {
   description = "Desired line of code"

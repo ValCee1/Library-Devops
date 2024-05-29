@@ -1,9 +1,13 @@
-- name: Upload files to backend
-  hosts: library
+- name: Upload files to {{ stack }}
+  hosts: { { stack } }
+  remote_user: ubuntu
+  become: true
+  become_user: "{{ new_username }}"
 
   roles:
     - nginx
-    - nodejs
     - copy-folder
+    - nodejs
+
   vars:
     folder_src: "{{ stack }}/"

@@ -1,0 +1,50 @@
+---
+# tasks file for playbooks/roles/promtail
+
+- name: Create directories for Promtail
+  file:
+    path: /opt/promtail
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+
+- name: Download Promtail binary
+  get_url:
+    url: "https://github.com/grafana/loki/releases/download/v{{ promtail_version }}/promtail-linux-amd64.zip"
+    dest: /tmp/promtail-linux-amd64.zip
+
+
+- name: Unzip Promtail binary
+  unarchive:
+    src: /tmp/promtail-linux-amd64.zip
+    dest: /opt/promtail/
+    remote_src: yes
+
+- name: Set executable permissions for Promtail
+  file:
+    path: /opt/promtail/promtail-linux-amd64
+    state: file
+    owner: root
+    group: root
+    mode: '0755'
+    
+- name: Create Promtail config file
+  ansible.builtin.template: 
+    dest: /opt/promtail/promtail-config.yaml
+    src: promtail-config.yaml.j2
+    group: root
+    mode: 0664
+
+- name: Create Promtail systemd service
+  ansible.builtin.template: 
+    dest: /etc/systemd/system/promtail.service
+    src: promtail.service.j2
+    group: root
+    mode: 0664
+
+  notify: 
+    - Reload systemd
+    - Enable and start Promtail service
+

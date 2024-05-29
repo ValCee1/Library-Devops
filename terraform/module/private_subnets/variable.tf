@@ -26,16 +26,6 @@ variable "open_ports" {
   type        = list(number)
 }
 
-variable "openVPN_ip" {
-  description = "IP address for openVPN"
-  type        = string
-}
-
-variable "SSH_PORT" {
-  description = "Custom SSH Port"
-  type        = number
-}
-
 
 variable "tags" {
   description = "CIDR block for VPC"

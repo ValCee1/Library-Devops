@@ -25,11 +25,6 @@ variable "open_ports" {
   type        = list(number)
 }
 
-variable "SSH_PORT" {
-  description = "Custom SSH Port"
-  type        = number
-}
-
 
 variable "tags" {
   description = "CIDR block for VPC"

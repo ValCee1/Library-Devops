@@ -1,11 +1,11 @@
 ---
 - name: Create a new user with SSH key on Ubuntu EC2 instance
-  hosts: backend
+  hosts: ubuntu_machines
   become: true
-  become_user: "{{ new_username }}"
+  become_user: ubuntu
 
   vars:
-    public_key: ~/Desktop/Library-Devops/terraform/development/devops_training_key.pub
+    public_key: ~/private_files/ssh_keys/devops_training_key.pub
 
   tasks:
     - name: Create a new user

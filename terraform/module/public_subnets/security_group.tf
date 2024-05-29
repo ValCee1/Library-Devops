@@ -13,13 +13,6 @@ resource "aws_security_group" "public" {
     description = "Permit all outbound traffic"
   }
 
-  ingress {
-    from_port   = var.SSH_PORT
-    to_port     = var.SSH_PORT
-    protocol    = "tcp"
-    cidr_blocks = [var.ALL_IPs]
-    description = "Allow SSH access for VPN"
-  }
 
   tags = var.tags
 

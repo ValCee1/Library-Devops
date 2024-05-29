@@ -12,14 +12,6 @@ resource "aws_security_group" "custom-elb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    from_port   = var.SSH_PORT
-    to_port     = var.SSH_PORT
-    protocol    = "tcp"
-    cidr_blocks = ["${var.openVPN_ip}/32"]
-    description = "Allow SSH access for VPN"
-  }
-
 
   tags = var.tags
 }

@@ -1,0 +1,11 @@
+---
+# handlers file for playbooks/roles/grafana
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+
+- name: Enable and start Grafana service
+  systemd:
+    name: grafana
+    enabled: yes
+    state: started

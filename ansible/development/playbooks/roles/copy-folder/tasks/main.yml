@@ -1,0 +1,6 @@
+---
+# tasks file for copy-folder
+- name: Copy folder
+  ansible.builtin.copy:
+    src: "{{ folder_src }}"
+    dest: "{{ remote_project_folder }}"
