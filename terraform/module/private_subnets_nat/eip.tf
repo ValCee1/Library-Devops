@@ -1,3 +1,3 @@
-resource "aws_eip" "private" {
+resource "aws_eip" "nat" {
   domain = "vpc"
 }

@@ -10,6 +10,6 @@
       - wget
       - unzip
       - python3-pip
+      - curl
     state: present
-
 

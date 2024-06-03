@@ -2,13 +2,16 @@
 # tasks file for update
 - name: Update apt package cache
   ansible.builtin.apt:
-    update_cache: yes
+    update_cache: true
+    force_apt_get: true
 
 - name: Upgrade all packages
   ansible.builtin.apt:
-    upgrade: yes
+    upgrade: true
+
 
 - name: Update all apps
   ansible.builtin.apt:
     name: '*'
     state: latest
+    force_apt_get: yes

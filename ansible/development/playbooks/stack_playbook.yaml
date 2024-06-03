@@ -1,13 +1,23 @@
 - name: Upload files to {{ stack }}
-  hosts: { { stack } }
-  remote_user: ubuntu
+  remote_user: "{{ new_username }}"
   become: true
-  become_user: "{{ new_username }}"
-
+  hosts: backend
   roles:
-    - nginx
     - copy-folder
+    - nginx
     - nodejs
-
   vars:
     folder_src: "{{ stack }}/"
+    stack: backend
+
+- name: Upload files to {{ stack }}
+  remote_user: "{{ new_username }}"
+  become: true
+  hosts: frontend
+  roles:
+    - copy-folder
+    - nginx
+    - nodejs
+  vars:
+    folder_src: "{{ stack }}/"
+    stack: frontend

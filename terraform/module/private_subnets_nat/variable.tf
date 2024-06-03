@@ -26,11 +26,10 @@ variable "open_ports" {
   type        = list(number)
 }
 
-variable "DB_PORT" {
-  description = "Database Port for MongoDB"
-  type        = number
+variable "public_subnet_id" {
+  description = "Public subnet id for the nat gateway"
+  type        = string
 }
-
 variable "tags" {
   description = "CIDR block for VPC"
   type        = map(string)

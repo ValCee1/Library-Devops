@@ -1,9 +1,9 @@
 - name: Install monitoring tools
   hosts: monitors
+  remote_user: "{{ new_username }}"
   become: true
-  become_user: "{{ new_username }}"
 
   roles:
+    - grafana
     - loki
     - prometheus
-    - grafana

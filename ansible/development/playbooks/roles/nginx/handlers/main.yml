@@ -2,6 +2,7 @@
 # handlers file for playbooks/roles/nginx
 
 - name: Reload Nginx
-  systemd:
+  ansible.builtin.systemd:
     name: nginx
     state: reloaded
+    

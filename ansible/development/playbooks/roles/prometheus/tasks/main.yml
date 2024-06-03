@@ -46,5 +46,5 @@
 
   notify: 
     - Reload systemd
-    - Enable and start Promtail service
+    - Enable and start Prometheus service
 

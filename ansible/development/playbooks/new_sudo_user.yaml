@@ -1,40 +1,52 @@
 ---
-- name: Create a new user with SSH key on Ubuntu EC2 instance
-  hosts: ubuntu_machines
+- name: Create a new user with SSH login using a local SSH key
+  hosts: all
   become: true
-  become_user: ubuntu
-
-  vars:
-    public_key: ~/private_files/ssh_keys/devops_training_key.pub
 
   tasks:
     - name: Create a new user
       ansible.builtin.user:
         name: "{{ new_username }}"
+        password: "{{ new_user_password }}"
+        state: present
         shell: /bin/bash
-        groups: sudo
-        append: true
+        create_home: true
+        groups: "sudo"
 
-    - name: Create .ssh directory in the user's home
+    - name: Create .ssh directory for the new user
       ansible.builtin.file:
-        path: "/home/{{ new_username }}/.ssh"
+        path: /home/{{ new_username }}/.ssh
         state: directory
         owner: "{{ new_username }}"
         group: "{{ new_username }}"
         mode: "0700"
 
-    - name: Copy the vaulted SSH public key to authorized_keys
+    - name: Copy SSH public key to the new user
       ansible.builtin.copy:
-        src: "{{ public_key }}"
+        src: "{{ ssh_key_file }}"
         dest: "/home/{{ new_username }}/.ssh/authorized_keys"
         owner: "{{ new_username }}"
         group: "{{ new_username }}"
         mode: "0600"
 
-    - name: Ensure correct permissions for the user's home directory
-      ansible.builtin.file:
-        path: "/home/{{ new_username }}"
-        state: directory
-        owner: "{{ new_username }}"
-        group: "{{ new_username }}"
-        mode: "0755"
+    - name: Disable password authentication for SSH
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "^#?PasswordAuthentication"
+        line: "PasswordAuthentication no"
+        state: present
+      notify:
+        - Restart SSH
+
+    - name: Allow the new user to run sudo without a password
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers.d/{{ new_username }}
+        create: true
+        line: "{{ new_username }} ALL=(ALL) NOPASSWD:ALL"
+        validate: "/usr/sbin/visudo -cf %s"
+
+  handlers:
+    - name: Restart SSH
+      ansible.builtin.service:
+        name: ssh
+        state: restarted

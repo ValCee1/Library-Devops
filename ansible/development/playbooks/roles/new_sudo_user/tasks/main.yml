@@ -1,0 +1,40 @@
+    - name: Create a new user
+      ansible.builtin.user:
+        name: "{{ new_username }}"
+        password: "{{ new_user_password }}"
+        state: present
+        shell: /bin/bash
+        create_home: yes
+        groups: "sudo" # For Debian/Ubuntu-based systems
+        # groups: "wheel"  # For RHEL/CentOS-based systems
+
+    - name: Create .ssh directory
+      file:
+        path: "/home/{{ new_username }}/.ssh"
+        state: directory
+        owner: "{{ new_username }}"
+        group: "{{ new_username }}"
+        mode: "0700"
+
+    - name: Add SSH key to the authorized_keys file
+      authorized_key:
+        user: "{{ new_username }}"
+        state: present
+        key: "{{ new_user_ssh_key }}"
+        path: "/home/{{ new_username }}/.ssh/authorized_keys"
+
+    - name: Set permissions on the authorized_keys file
+      file:
+        path: "/home/{{ new_username }}/.ssh/authorized_keys"
+        state: file
+        owner: "{{ new_username }}"
+        group: "{{ new_username }}"
+        mode: "0600"
+
+    - name: Allow '{{ new_username }}' to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers.d/{{ new_username }}
+        state: present
+        create: yes
+        line: "{{ new_username }} ALL=(ALL) NOPASSWD:ALL"
+        validate: "visudo -cf %s"

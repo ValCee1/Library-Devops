@@ -1,12 +1,15 @@
-      [Unit]
-      Description=Grafana Monitoring System
-      After=network.target
+# roles/grafana/templates/grafana.service.j2
+[Unit]
+Description=Grafana instance
+After=network.target
 
-      [Service]
-      ExecStart=/opt/grafana/bin/grafana-server --homepath /opt/grafana
-      Restart=always
-      User=root
+[Service]
+ExecStart=/opt/grafana/bin/grafana-server \
+  --config=/opt/grafana/conf/defaults.ini \
+  --homepath=/opt/grafana
+User=root
+Group=root
+Restart=always
 
-      [Install]
-      WantedBy=multi-user.target
-
+[Install]
+WantedBy=multi-user.target

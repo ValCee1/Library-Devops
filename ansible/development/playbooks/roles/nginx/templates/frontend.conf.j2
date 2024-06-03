@@ -24,17 +24,5 @@ server {
     location / {
         try_files $uri $uri /index.html?$query_string;
     }
-    {% if cert_path %}
-        listen 443 ssl;
-        ssl_certificate /etc/certs/live/{{cert_domain}}/fullchain.pem;
-        ssl_certificate_key /etc/certs/live/{{cert_domain}}/privkey.pem;
-    {% endif %}
-}
 
-{% if cert_path %}
-    server {
-        listen 80;
-        server_name {{ server_names | join(' ') }};
-        return 301 https://$host$request_uri;
-    }
-{% endif %}
+}
