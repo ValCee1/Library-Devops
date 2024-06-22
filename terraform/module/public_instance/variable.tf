@@ -2,10 +2,6 @@ variable "ami" {
   description = "Free tier Amazon-linux ami"
   type        = string
 }
-variable "department" {
-  description = "Department of deployment"
-  type        = string
-}
 variable "environment" {
   description = "Current deployment environment"
   type        = string
@@ -23,7 +19,6 @@ variable "public_subnet_id" {
   description = "public subnet_id"
   type        = string
 }
-
 
 variable "security_group_ids" {
   description = "Instance security_groups"

@@ -1,2 +1,8 @@
 ---
 # handlers file for playbooks/roles/new_sudo_user
+- name: Reboot the machine
+  ansible.builtin.reboot:
+    msg: "Reboot initiated by Ansible playbook"
+    reboot_timeout: 10
+  notify:
+    - Reboot the machine

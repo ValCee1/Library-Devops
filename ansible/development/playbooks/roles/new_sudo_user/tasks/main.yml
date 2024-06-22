@@ -1,40 +1,47 @@
-    - name: Create a new user
-      ansible.builtin.user:
-        name: "{{ new_username }}"
-        password: "{{ new_user_password }}"
-        state: present
-        shell: /bin/bash
-        create_home: yes
-        groups: "sudo" # For Debian/Ubuntu-based systems
-        # groups: "wheel"  # For RHEL/CentOS-based systems
+---
+- name: Validate required variables
+  ansible.builtin.fail:
+    msg: "Required variables not set: ssh_key_file"
+  when:
+    - ssh_key_file is not defined
 
-    - name: Create .ssh directory
-      file:
-        path: "/home/{{ new_username }}/.ssh"
-        state: directory
-        owner: "{{ new_username }}"
-        group: "{{ new_username }}"
-        mode: "0700"
+- name: Create a new user
+  ansible.builtin.user:
+    name: "{{ new_username }}"
+    password: "{{ new_user_password }}"
+    state: present
+    shell: /bin/bash
+    create_home: true
+    groups: "sudo"
+  notify: Reboot the machine
 
-    - name: Add SSH key to the authorized_keys file
-      authorized_key:
-        user: "{{ new_username }}"
-        state: present
-        key: "{{ new_user_ssh_key }}"
-        path: "/home/{{ new_username }}/.ssh/authorized_keys"
+- name: Create .ssh directory for the new user
+  ansible.builtin.file:
+    path: /home/{{ new_username }}/.ssh
+    state: directory
+    owner: "{{ new_username }}"
+    group: "{{ new_username }}"
+    mode: "0700"
 
-    - name: Set permissions on the authorized_keys file
-      file:
-        path: "/home/{{ new_username }}/.ssh/authorized_keys"
-        state: file
-        owner: "{{ new_username }}"
-        group: "{{ new_username }}"
-        mode: "0600"
+- name: Copy SSH public key to the new user
+  ansible.builtin.copy:
+    src: "{{ ssh_key_file }}"
+    dest: "/home/{{ new_username }}/.ssh/authorized_keys"
+    owner: "{{ new_username }}"
+    group: "{{ new_username }}"
+    mode: "0600"
+    remote_src: false
 
-    - name: Allow '{{ new_username }}' to have passwordless sudo
-      lineinfile:
-        dest: /etc/sudoers.d/{{ new_username }}
-        state: present
-        create: yes
-        line: "{{ new_username }} ALL=(ALL) NOPASSWD:ALL"
-        validate: "visudo -cf %s"
+- name: Disable password authentication for SSH
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PasswordAuthentication"
+    line: "PasswordAuthentication no"
+    state: present
+
+- name: Allow the new user to run sudo without a password
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/{{ new_username }}
+    create: true
+    line: "{{ new_username }} ALL=(ALL) NOPASSWD:ALL"
+    validate: "/usr/sbin/visudo -cf %s"

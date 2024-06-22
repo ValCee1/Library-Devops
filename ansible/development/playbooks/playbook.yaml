@@ -1,21 +1,23 @@
-- name: Update all nodes
-  hosts: all
-  remote_user: ubuntu # ec2-user
-  become: true
-  become_user: root
-
-  roles:
-    - update
-    - dependencies
-
-- name: Create new user for all hosts
-  ansible.builtin.import_playbook: new_sudo_user.yaml
-
-- name: Import Playbooks for backend and frontend
+- name: Import Playbooks for frontend
   ansible.builtin.import_playbook: stack_playbook.yaml
+  vars:
+    stack: frontend
+# - name: Import Playbooks for backend
+#   ansible.builtin.import_playbook: stack_playbook.yaml
+#   vars:
+#     stack: backend
 
 - name: Import Playbooks for monitored machines
   ansible.builtin.import_playbook: monitored.yaml
 
 - name: Import Playbooks for Monitoring
   ansible.builtin.import_playbook: monitors.yaml
+
+- name: Restart Nodes
+  hosts: all
+  become: true
+  tasks:
+    - name: Reboot the machine
+      ansible.builtin.reboot:
+        msg: "Reboot initiated by Ansible playbook"
+        reboot_timeout: 60

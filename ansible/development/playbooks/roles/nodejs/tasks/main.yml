@@ -8,14 +8,24 @@
   ansible.builtin.apt:
     name: nodejs
     state: present
+   
 
-- name: Change to project directory and run npm install
-  command: npm install
-  args:
-    chdir: "{{ remote_project_folder }}"
-    
-- name: Change to project directory and install PM2
-  command: npm install pm2 -g
-  args:
-    chdir: "{{ remote_project_folder }}"
-    
+- name: Validate required variables
+  fail:
+    msg: "Required variables not set"
+  when: 
+    - DB_USERNAME is not defined
+    - DB_PASSWORD is not defined
+    - backend_port is not defined
+    - frontend_port is not defined
+    - admin_Mail is not defined
+    - mail_Password is not defined
+
+- name: Run Backend deployment tasks
+  import_tasks: deploy-backend.yml
+  when: stack == "backend"
+
+
+- name: Run frontend deployment tasks
+  import_tasks: deploy-frontend.yml
+  when: stack == "frontend"

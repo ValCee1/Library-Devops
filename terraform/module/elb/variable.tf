@@ -1,5 +1,10 @@
 # Variable definitions for Subnet module
 
+variable "allowed_IPs" {
+  description = "Allowed IP addresses on open ports"
+  type        = list(string)
+}
+
 variable "instance_ids" {
   description = "Instance IDs to be used"
   type        = list(string)

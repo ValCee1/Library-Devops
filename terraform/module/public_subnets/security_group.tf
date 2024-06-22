@@ -14,6 +14,14 @@ resource "aws_security_group" "public" {
   }
 
 
+  ingress {
+    from_port   = "-1"
+    to_port     = "-1"
+    protocol    = "icmp"
+    cidr_blocks = [var.ALL_IPs]
+    description = "Allow inbound ICMP ping"
+  }
+
   tags = var.tags
 
 }

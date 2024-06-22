@@ -1,8 +1,56 @@
 ---
-# tasks file for github_clone
 
-- name: Copy app from git repo to Ansible engine
+- name: Remove any existing repo in the destination folder
+  ansible.builtin.command:
+    cmd: "rm -rf {{ frontend_project_folder }}"
+  ignore_errors: true
+
+- name: Ensure the destination folder exists after cleanup
+  ansible.builtin.file:
+    path: "{{ frontend_project_folder }}"
+    state: directory
+    mode: "7777"
+    owner: "{{ new_username }}"
+    group: "{{ new_username }}"
+
+- name: Configure Git to trust the destination folder
+  ansible.builtin.command:
+    cmd: "git config --global --add safe.directory {{ frontend_project_folder }}"
+  become: true
+
+- name: Clone the Git repository using HTTPS
   ansible.builtin.git:
-    repo: https://github.com/ValCee1/devops-project.git
-    dest: /apps/my-github/
-    version: natours
+    repo: "{{ github_repo_url }}"
+    dest: "{{ frontend_project_folder }}"
+    version: "main"
+    clone: true
+    force: true
+  register: git_clone_result
+
+- name: Ensure the repository is cloned
+  ansible.builtin.assert:
+    that:
+      - git_clone_result.after is defined
+    fail_msg: "Failed to clone the repository."
+
+- name: Check if the required folder exists
+  ansible.builtin.stat:
+    path: "{{ frontend_project_folder }}"
+  register: folder_check
+
+- name: Assert the required folder exists
+  ansible.builtin.assert:
+    that:
+      - folder_check.stat.isdir
+    fail_msg: "The required folder does not exist: {{ frontend_project_folder }}"
+
+- name: Check if the required file exists
+  ansible.builtin.stat:
+    path: "{{ frontend_project_folder }}/package.json"
+  register: file_check
+
+- name: Assert the required file exists
+  ansible.builtin.assert:
+    that:
+      - file_check.stat.exists
+    fail_msg: "The required file does not exist: package.json"

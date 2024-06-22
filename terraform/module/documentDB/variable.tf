@@ -5,6 +5,11 @@ variable "ALL_IPs" {
   type        = string
   default     = "0.0.0.0/0"
 }
+variable "allowed_IPs" {
+  description = "Allowed IP addresses on open ports"
+  type        = list(string)
+}
+
 variable "azs" {
   description = "Availability zones"
   type        = list(string)

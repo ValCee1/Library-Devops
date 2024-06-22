@@ -1,23 +1,23 @@
-- name: Upload files to {{ stack }}
+- name: "Deploy App to {{ stack }}"
   remote_user: "{{ new_username }}"
   become: true
-  hosts: backend
-  roles:
-    - copy-folder
-    - nginx
-    - nodejs
-  vars:
-    folder_src: "{{ stack }}/"
-    stack: backend
+  hosts: "{{ stack }}"
 
-- name: Upload files to {{ stack }}
-  remote_user: "{{ new_username }}"
-  become: true
-  hosts: frontend
+  # gather_facts: false
   roles:
-    - copy-folder
+    - github_clone
     - nginx
     - nodejs
-  vars:
-    folder_src: "{{ stack }}/"
-    stack: frontend
+
+  # vars:
+  # allowed_ports:
+  #   - { port: 80, proto: tcp }
+  #   - { port: 443, proto: tcp }
+  #   - { port: "{{ ansible_port }}", proto: tcp }
+  #   - { port: "{{ pm2_port }}", proto: tcp }
+  #   - { port: "{{ promtail_port }}", proto: tcp }
+  #   - { port: "{{ prometheus_port }}", proto: tcp }
+  #   - { port: "{{ telegraf_port }}", proto: tcp }
+  #   - { port: "{{ loki_port }}", proto: tcp }
+  #   - { port: "{{ grafana_port }}", proto: tcp }
+  #   - { port: "{{ node_exporter_port }}", proto: tcp }

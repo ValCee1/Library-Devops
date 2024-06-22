@@ -1,43 +1,56 @@
 
-
 - name: Install Nginx
   ansible.builtin.apt:
     name: nginx
     state: present
+    update_cache: true
 
-- name: Deploy Nginx site configuration
-  ansible.builtin.template:
-    src: frontend.conf.j2
-    dest: "/etc/nginx/sites-available/{{ domain }}.conf"
-    mode: '0644'
-    owner: root
-    group: root
-  when: stack == "frontend"
-  notify:
-    - Reload Nginx
-
-- name: Deploy Nginx site configuration - backend
-  ansible.builtin.template:
-    src: backend.conf.j2
-    dest: "/etc/nginx/sites-available/{{ domain }}.conf"
-    mode: '0644'
-    owner: root
-    group: root
-  when: stack == "backend"
-  notify:
-    - Reload Nginx
-
-- name: Enable site by creating a symbolic link
+- name: Remove default Nginx site
   ansible.builtin.file:
-    src: "/etc/nginx/sites-available/{{ domain }}.conf"
-    dest: "/etc/nginx/sites-enabled/{{ domain }}.conf"
-    state: link
-    force: true
-  notify:
-    - Reload Nginx
+    path: /etc/nginx/sites-enabled/default
+    state: absent
 
-- name: Ensure Nginx service is enabled and started
-  ansible.builtin.systemd:
+- name: Validate required variables
+  fail:
+    msg: "Required variables not set: nginx_listen_port, backend_port, server_names, domain"
+  when: 
+    - nginx_listen_port is not defined
+    - server_names is not defined
+    - domain is not defined
+    - backend_port is not defined
+    - frontend_port is not defined
+    - frontend_root is not defined
+    - backnd_root is not defined
+
+
+
+- name: Deploy Nginx config
+  import_tasks: config_deploy.yaml
+
+
+- name: Start Nginx service
+  ansible.builtin.service:
     name: nginx
-    enabled: true
     state: started
+  register: nginx_service_status
+  failed_when: nginx_service_status.failed or nginx_service_status.state != "started"
+
+- name: Fetch Nginx service status
+  ansible.builtin.shell: systemctl status nginx.service
+  register: nginx_service_status_output
+  changed_when: false
+  ignore_errors: true
+
+- name: Fetch Nginx logs
+  ansible.builtin.shell: journalctl -xeu nginx.service
+  register: nginx_logs
+  changed_when: false
+  ignore_errors: true
+
+# - name: Display Nginx service status
+#   ansible.builtin.debug:
+#     var: nginx_service_status_output.stdout_lines
+
+# - name: Display Nginx logs
+#   ansible.builtin.debug:
+#     var: nginx_logs.stdout_lines

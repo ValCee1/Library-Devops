@@ -9,12 +9,13 @@ subnet_cidr = {
   public  = "10.0.1.0/24"
 }
 
-iam_usernames      = ["emerie", "val"]
-instance_type      = "t2.micro"
-key_name           = "ssh"
-openvpn_ami        = "ami-07bf5da57dc62b064"
-PATH_TO_PUBLIC_KEY = "./keys/devops_training_key.pub"
-SSH_PORT           = 12890
-trustedIPs         = ["196.251.243.156/30", "10.0.0.0/16"]
+iam_usernames       = ["emerie", "val"]
+instance_type       = "t2.micro"
+key_name            = "ssh"
+openvpn_ami         = "ami-07bf5da57dc62b064"
+PATH_TO_PRIVATE_KEY = "~/private_files/ssh_keys/devops_training_key"
+PATH_TO_PUBLIC_KEY  = "./keys/devops_training_key.pub"
+SSH_PORT            = 12890
+allowed_IPs         = ["196.251.243.156/30", "10.0.0.0/16"]
 
 vpc_cidr = "10.0.0.0/16"

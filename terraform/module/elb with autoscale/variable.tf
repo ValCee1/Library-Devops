@@ -6,6 +6,11 @@ variable "ALL_IPs" {
   default     = "0.0.0.0/0"
 }
 
+variable "allowed_IPs" {
+  description = "Allowed IP addresses on open ports"
+  type        = list(string)
+}
+
 variable "frontend_ip" {
   description = "IP address for frontend instances"
   type        = list(string)

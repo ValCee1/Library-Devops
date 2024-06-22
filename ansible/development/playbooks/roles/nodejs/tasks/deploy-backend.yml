@@ -1,0 +1,27 @@
+- name: "Check if the folder exists on the Backend"
+  ansible.builtin.stat:
+    path: "{{ backend_project_folder }}"
+  register: backend_dir_stat
+
+- name: "Debug Backend directory non-existence"
+  ansible.builtin.fail:
+    msg: "The backend directory does not exist."
+  when: not backend_dir_stat.stat.exists
+
+- name: "Copy Bcakend ENV Variables"
+  ansible.builtin.template:
+    src: backend.env.j2
+    dest: "{{ backend_project_folder }}/config.env"
+
+- name: "Run the next task only if the Backkend folder exists"
+  debug:
+    msg: "Backend folder Complete. Proceeding with next tasks."
+  when: backend_dir_stat.stat.exists
+
+- name: "NPM Install for Bcakend"
+  args:
+    chdir: "{{ backend_project_folder }}"
+  command: 
+    npm install
+    pm2 start server.js
+    

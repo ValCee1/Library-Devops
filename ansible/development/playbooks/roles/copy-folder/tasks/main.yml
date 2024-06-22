@@ -1,6 +1,27 @@
 ---
 # tasks file for copy-folder
-- name: Copy folder
+- name: Copy folder to remote host
   ansible.builtin.copy:
     src: "{{ folder_src }}"
     dest: "{{ remote_project_folder }}"
+  register: copy_result
+
+- name: Output the result of the copy task
+  debug:
+    var: copy_result
+
+- name: Check if the folder exists on the remote host
+  ansible.builtin.stat:
+    path: "{{ remote_project_folder }}"
+  register: folder_stat
+
+- name: Fail if the folder was not copied successfully
+  ansible.builtin.fail:
+    msg: "Folder was not copied successfully."
+  when: not folder_stat.stat.exists
+
+- name: Run the next task only if the folder exists
+  debug:
+    msg: "Folder exists and was copied successfully. Proceeding with next tasks."
+  when: folder_stat.stat.exists
+  

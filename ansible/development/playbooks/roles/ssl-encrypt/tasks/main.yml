@@ -1,0 +1,60 @@
+---
+# tasks file for playbooks/roles/ssl-encrypt
+
+- name: Install required packages for Let's Encrypt
+  ansible.builtin.apt:
+    name: 
+      - python3-certbot-nginx
+      - certbot
+      - xsel
+    state: latest
+    update_cache: yes
+
+- name: Create directory for SSL certificate
+  ansible.builtin.file:
+    path: "{{ cert_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Generate Let's Encrypt account key
+  community.crypto.openssl_privatekey:
+    path: "{{ cert_path }}/account.key"
+    size: 2048
+  register: account_key_result
+
+- name: Generate private key
+  community.crypto.openssl_privatekey:
+    path: "{{ cert_path }}/privkey.pem"
+    size: 2048
+  register: private_key
+
+- name: Generate CSR
+  community.crypto.openssl_csr:
+    path: "{{ cert_path }}/csr.pem"
+    privatekey_path: "{{ cert_path }}/privkey.pem"
+    common_name: "{{ domain }}"
+  register: csr
+
+- name: Obtain SSL certificate using CSR
+  community.crypto.acme_certificate:
+    account_email: "{{ admin_Mail }}"
+    acme_directory: "https://acme-v02.api.letsencrypt.org/directory"
+    acme_version: "2"
+    terms_agreed: true
+    account_key_src: "{{ cert_path }}/account.key"
+    csr: "{{ cert_path }}/csr.pem"
+    dest: "{{ cert_path }}/certificate.pem"
+    fullchain_dest: "{{ cert_path }}/fullchain.pem"
+    chain_dest: "{{ cert_path }}/chain.pem"
+  register: letsencrypt_output
+  tags: obtain_ssl_certificate
+
+- name: Set permissions for SSL certificate files
+  ansible.builtin.file:
+    path: "{{ cert_path }}/{{ item }}"
+    owner: root
+    group: www-data
+    mode: '0644'
+  loop:
+    - "fullchain.pem"
+    - "privkey.pem"

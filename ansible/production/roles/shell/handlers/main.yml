@@ -1,8 +1,0 @@
----
-# handlers file for shell
-
-- name: Reload Nginx
-  service:
-    name: Nginx
-    state: 
-      reloaded

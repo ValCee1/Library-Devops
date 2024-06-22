@@ -1,6 +1,0 @@
----
-# tasks file for shell
-- name: Create The HTML File
-  shell: shutdown -r now
-  args:
-    executable: /bin/bash

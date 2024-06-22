@@ -6,7 +6,7 @@ resource "aws_security_group_rule" "ingress" {
   from_port         = var.open_ports[count.index]
   to_port           = var.open_ports[count.index]
   protocol          = "tcp"
-  cidr_blocks       = ["10.0.0.0/16"]
+  cidr_blocks       = var.allowed_IPs
   security_group_id = aws_security_group.custom-elb.id
   count             = length(var.open_ports)
 }

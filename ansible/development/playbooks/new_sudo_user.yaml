@@ -1,6 +1,7 @@
 ---
 - name: Create a new user with SSH login using a local SSH key
-  hosts: all
+  hosts: ubuntu_machines
+  remote_user: ubuntu
   become: true
 
   tasks:
@@ -12,6 +13,7 @@
         shell: /bin/bash
         create_home: true
         groups: "sudo"
+      notify: Reboot the machine
 
     - name: Create .ssh directory for the new user
       ansible.builtin.file:
@@ -35,8 +37,6 @@
         regexp: "^#?PasswordAuthentication"
         line: "PasswordAuthentication no"
         state: present
-      notify:
-        - Restart SSH
 
     - name: Allow the new user to run sudo without a password
       ansible.builtin.lineinfile:
@@ -46,7 +46,9 @@
         validate: "/usr/sbin/visudo -cf %s"
 
   handlers:
-    - name: Restart SSH
-      ansible.builtin.service:
-        name: ssh
-        state: restarted
+    - name: Reboot the machine
+      ansible.builtin.reboot:
+        msg: "Reboot initiated by Ansible playbook"
+        reboot_timeout: 10
+      notify:
+        - Reboot the machine

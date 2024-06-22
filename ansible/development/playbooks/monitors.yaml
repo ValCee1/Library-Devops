@@ -2,6 +2,7 @@
   hosts: monitors
   remote_user: "{{ new_username }}"
   become: true
+  gather_facts: false
 
   roles:
     - grafana

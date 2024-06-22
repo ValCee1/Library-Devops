@@ -1,0 +1,10 @@
+- name: Update, Install dependencies, Create New User
+  hosts: all
+  remote_user: ubuntu # ec2-user
+  become: true
+  become_user: root
+
+  roles:
+    - update
+    - dependencies
+    - new_sudo_user

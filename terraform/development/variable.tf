@@ -2,9 +2,12 @@ variable "ALL_IPs" {
   description = "IP address CIDR and subnet mask for all IP ranges, without exception"
   type        = string
   default     = "0.0.0.0/0"
-
 }
 
+variable "allowed_IPs" {
+  description = ""
+  type        = list(string)
+}
 variable "ami" {
   description = "Free tier Amazon-linux ami"
   type        = string
@@ -74,13 +77,13 @@ variable "PATH_TO_PUBLIC_KEY" {
   description = "path to get to my locally generated public-key"
   type        = string
 }
+variable "PATH_TO_PRIVATE_KEY" {
+  description = "path to get to my locally generated public-key"
+  type        = string
+}
 variable "SSH_PORT" {
   description = "SSH port in use for the instances. Default is 22"
   type        = number
-}
-variable "trustedIPs" {
-  description = ""
-  type        = list(string)
 }
 variable "vpc_cidr" {
   description = "Custom cidr block for my vpc"

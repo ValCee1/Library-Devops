@@ -1,3 +1,0 @@
----
-# vars file for nodejs
-node_repo: "https://deb.nodesource.com/setup_{{node_version}}.x"

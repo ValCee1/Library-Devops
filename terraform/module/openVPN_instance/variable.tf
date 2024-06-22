@@ -43,7 +43,7 @@ variable "subnet_id" {
   type        = string
 }
 
-variable "trustedIPs" {
+variable "allowed_IPs" {
   description = ""
   type        = list(string)
 }
