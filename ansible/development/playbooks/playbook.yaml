@@ -15,6 +15,7 @@
 
 - name: Restart Nodes
   hosts: all
+  remote_user: "{{ new_username }}"
   become: true
   tasks:
     - name: Reboot the machine
