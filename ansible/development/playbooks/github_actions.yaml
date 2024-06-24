@@ -2,7 +2,8 @@
   hosts: monitored
   remote_user: "{{ new_username }}" # ec2-user
   become: true
-  gather_facts: false
+  vars_files:
+    - "~/private_files/var_files/my_secrets.yml"
 
   tasks:
     - name: Create actions-runner directory

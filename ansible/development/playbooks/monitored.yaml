@@ -2,7 +2,9 @@
   hosts: monitored
   remote_user: "{{ new_username }}"
   become: true
-  gather_facts: false
+  gather_facts: true
+  vars_files:
+    - "~/private_files/var_files/my_secrets.yml"
 
   roles:
     - promtail

@@ -1,50 +1,56 @@
 ---
 # tasks file for playbooks/roles/prometheus
+
 - name: Create directories for Prometheus
-  file:
+  ansible.builtin.file:
     path: /opt/prometheus
     state: directory
     owner: root
     group: root
-    mode: '0755'
-
+    mode: "0755"
 
 - name: Download Prometheus binary
-  get_url:
+  ansible.builtin.get_url:
     url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
     dest: /tmp/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz
+  register: download_result
 
 - name: Unarchive Prometheus binary
-  unarchive:
+  ansible.builtin.unarchive:
     src: /tmp/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz
     dest: /opt/prometheus/
     remote_src: yes
+  when: download_result.changed
 
 - name: Set executable permissions for Prometheus
-  file:
+  ansible.builtin.file:
     path: /opt/prometheus/prometheus-{{ prometheus_version }}.linux-amd64/prometheus
     state: file
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
 
+- name: Clean up Prometheus tarball
+  ansible.builtin.file:
+    path: /tmp/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz
+    state: absent
+  when: download_result.changed
 
 - name: Create Prometheus config file
-  ansible.builtin.template: 
+  ansible.builtin.template:
     dest: /opt/prometheus/prometheus.yml
     src: prometheus.yml.j2
+    owner: root
     group: root
-    mode: 0664
-
+    mode: "0664"
 
 - name: Create Prometheus systemd service
-  ansible.builtin.template: 
+  ansible.builtin.template:
     dest: /etc/systemd/system/prometheus.service
     src: prometheus.service.j2
+    owner: root
     group: root
-    mode: 0664
-
-  notify: 
+    mode: "0664"
+  notify:
     - Reload systemd
     - Enable and start Prometheus service
-

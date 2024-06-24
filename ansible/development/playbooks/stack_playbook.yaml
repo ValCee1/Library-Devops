@@ -2,6 +2,8 @@
   remote_user: "{{ new_username }}"
   become: true
   hosts: "{{ stack }}"
+  vars_files:
+    - "~/private_files/var_files/my_secrets.yml"
 
   # gather_facts: false
   roles:

@@ -65,7 +65,3 @@
     cmd: pm2 startup systemd -u $USER --hp $HOME
   register: pm2_startup
   changed_when: pm2_startup.rc == 0 # Changed only if the command succeeds (rc == 0)
-  notify:
-    - Save PM2 process list
-    - Reload Nginx
-    - Reload systemd daemon

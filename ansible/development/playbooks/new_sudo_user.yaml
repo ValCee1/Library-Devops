@@ -3,6 +3,8 @@
   hosts: ubuntu_machines
   remote_user: ubuntu
   become: true
+  vars_files:
+    - "~/private_files/var_files/my_secrets.yml"
 
   tasks:
     - name: Create a new user

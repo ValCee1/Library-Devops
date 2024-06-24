@@ -1,9 +1,12 @@
 ---
 - name: Validate required variables
   ansible.builtin.fail:
-    msg: "Required variables not set: ssh_key_file"
+    msg: "Required variables not set: ssh_key_file, new_user_password, DB_PASSWORD, github_token"
   when:
     - ssh_key_file is not defined
+    - new_user_password is not defined
+    - DB_PASSWORD is not defined
+    - github_token is not defined
 
 - name: Create a new user
   ansible.builtin.user:

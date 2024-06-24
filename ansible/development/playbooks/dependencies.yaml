@@ -3,6 +3,8 @@
   remote_user: ubuntu # ec2-user
   become: true
   become_user: root
+  vars_files:
+    - "~/private_files/var_files/my_secrets.yml"
 
   roles:
     - update
