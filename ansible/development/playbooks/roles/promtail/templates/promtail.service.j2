@@ -1,11 +1,11 @@
-      [Unit]
-      Description=Promtail Log Collector
-      After=network.target
+[Unit]
+Description=Promtail Log Collector
+After=network.target
 
-      [Service]
-      ExecStart=/opt/promtail/promtail-linux-amd64 -config.file /opt/promtail/promtail-config.yaml
-      Restart=always
-      User=root
+[Service]
+ExecStart=/opt/promtail/promtail-linux-amd64 -config.file /opt/promtail/promtail-config.yaml
+Restart=always
+User=root
 
-      [Install]
-      WantedBy=multi-user.target
+[Install]
+WantedBy=multi-user.target

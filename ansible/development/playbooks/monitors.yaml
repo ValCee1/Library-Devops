@@ -7,6 +7,6 @@
     - "~/private_files/var_files/my_secrets.yml"
 
   roles:
-    - grafana
-    - loki
+    - ansible-loki
     - prometheus
+    - grafana

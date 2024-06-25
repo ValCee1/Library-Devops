@@ -2,49 +2,58 @@
 # tasks file for playbooks/roles/promtail
 
 - name: Create directories for Promtail
-  file:
+  ansible.builtin.file:
     path: /opt/promtail
     state: directory
     owner: root
     group: root
-    mode: '0755'
-
+    mode: "0755"
 
 - name: Download Promtail binary
-  get_url:
+  ansible.builtin.get_url:
     url: "https://github.com/grafana/loki/releases/download/v{{ promtail_version }}/promtail-linux-amd64.zip"
     dest: /tmp/promtail-linux-amd64.zip
 
-
 - name: Unzip Promtail binary
-  unarchive:
+  ansible.builtin.unarchive:
     src: /tmp/promtail-linux-amd64.zip
     dest: /opt/promtail/
-    remote_src: yes
+    remote_src: true
+    creates: /opt/promtail/promtail-linux-amd64 # Prevents unnecessary extraction if file exists
 
 - name: Set executable permissions for Promtail
-  file:
+  ansible.builtin.file:
     path: /opt/promtail/promtail-linux-amd64
     state: file
     owner: root
     group: root
-    mode: '0755'
-    
+    mode: "0755"
+
 - name: Create Promtail config file
-  ansible.builtin.template: 
+  ansible.builtin.template:
     dest: /opt/promtail/promtail-config.yaml
     src: promtail-config.yaml.j2
+    owner: root
     group: root
-    mode: 0664
+    mode: "0664"
 
 - name: Create Promtail systemd service
-  ansible.builtin.template: 
+  ansible.builtin.template:
     dest: /etc/systemd/system/promtail.service
     src: promtail.service.j2
+    owner: root
     group: root
-    mode: 0664
+    mode: "0664"
 
-  notify: 
-    - Reload systemd
-    - Enable and start Promtail service
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
 
+- name: Enable and start Promtail service
+  ansible.builtin.systemd:
+    name: promtail
+    enabled: true
+    state: started
+
+- name: Run Service Check
+  ansible.builtin.import_tasks: service_check.yaml

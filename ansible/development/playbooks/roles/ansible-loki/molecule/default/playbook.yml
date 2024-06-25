@@ -1,0 +1,12 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  roles:
+    - {
+        role: "ansible-loki",
+        loki_version: "1.2.0",
+        loki_user: loki,
+        loki_group: loki,
+        loki_base_dir: /opt/loki,
+      }

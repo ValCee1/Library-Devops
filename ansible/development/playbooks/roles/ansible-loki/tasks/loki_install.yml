@@ -1,0 +1,77 @@
+---
+- name: Install dependencies
+  ansible.builtin.package:
+    name: unzip
+    state: present
+
+- name: Create {{ loki_group }} group
+  ansible.builtin.group:
+    name: "{{ loki_group }}"
+    state: present
+
+- name: Create {{ loki_user }} user
+  ansible.builtin.user:
+    name: "{{ loki_user }}"
+    group: "{{ loki_group }}"
+    createhome: false
+    shell: /sbin/nologin
+    comment: "Loki User"
+    state: present
+
+- name: Ensure service folder is present
+  ansible.builtin.file:
+    path: "{{ loki_base_dir }}"
+    state: directory
+    owner: "{{ loki_user }}"
+    group: "{{ loki_group }}"
+
+- name: Ensure config folder is present
+  ansible.builtin.file:
+    path: "{{ loki_config_dir }}"
+    state: directory
+    owner: root
+    group: "{{ loki_group }}"
+
+- name: Download Loki archive
+  ansible.builtin.get_url:
+    url: "{{ loki_dist_url }}"
+    dest: "{{ loki_dist_location }}"
+    tmp_dest: "/tmp/"
+
+- name: Unpack Loki archive
+  ansible.builtin.unarchive:
+    src: "{{ loki_dist_location }}"
+    dest: "{{ loki_base_dir }}"
+    remote_src: true
+    owner: root
+    group: "{{ loki_group }}"
+    mode: "u=rwx,g=rx,o=rx"
+    creates: "{{ loki_base_dir }}/loki-linux-amd64"
+
+- name: Make a symlink for loki binary
+  ansible.builtin.file:
+    src: "{{ loki_base_dir }}/loki-linux-amd64"
+    dest: "{{ loki_base_dir }}/loki"
+    owner: root
+    group: "{{ loki_group }}"
+    state: link
+
+- name: Template out loki config file
+  ansible.builtin.template:
+    src: "templates/config.yml.j2"
+    dest: "{{ loki_config_dir }}/config.yml"
+    owner: root
+    group: "{{ loki_group }}"
+    mode: "0644"
+
+- name: Template out Systemd service
+  ansible.builtin.template:
+    src: "templates/loki.service.j2"
+    dest: /etc/systemd/system/loki.service
+    mode: "0644"
+
+- name: Enabling and starting service
+  ansible.builtin.service:
+    name: "loki"
+    state: "started"
+    enabled: "true"

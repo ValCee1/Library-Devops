@@ -9,9 +9,8 @@
   ansible.builtin.apt:
     upgrade: true
 
-
 - name: Update all apps
   ansible.builtin.apt:
-    name: '*'
+    name: "*"
     state: latest
-    force_apt_get: yes
+    force_apt_get: true

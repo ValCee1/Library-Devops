@@ -2,40 +2,42 @@
 # tasks file for roles/grafana
 
 - name: Create directories for Grafana
-  file:
+  ansible.builtin.file:
     path: /opt/grafana
     state: directory
     owner: root
     group: root
-    mode: '0755'
-   
+    mode: "0755"
+
 - name: Download Grafana binary
-  get_url:
+  ansible.builtin.get_url:
     url: "https://dl.grafana.com/oss/release/grafana-{{ grafana_version }}.linux-amd64.tar.gz"
     dest: /tmp/grafana-{{ grafana_version }}.linux-amd64.tar.gz
 
 - name: Unarchive Grafana binary
-  unarchive:
+  ansible.builtin.unarchive:
     src: /tmp/grafana-{{ grafana_version }}.linux-amd64.tar.gz
     dest: /opt/grafana/
-    remote_src: yes
+    remote_src: true
     extra_opts: [--strip-components=1]
 
 - name: Set executable permissions for Grafana
-  file:
+  ansible.builtin.file:
     path: /opt/grafana/bin/grafana-server
     state: file
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
 
 - name: Create Grafana systemd service
-  template: 
+  ansible.builtin.template:
     dest: /etc/systemd/system/grafana.service
     src: grafana.service.j2
     group: root
-    mode: '0664'
-
-  notify: 
+    mode: "0664"
+  notify:
     - Reload systemd
     - Enable and start Grafana service
+
+- name: Run Service Check
+  import_tasks: service_check.yaml

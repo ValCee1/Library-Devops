@@ -11,7 +11,7 @@
 - name: Create a new user
   ansible.builtin.user:
     name: "{{ new_username }}"
-    password: "{{ new_user_password }}"
+    # password: "{{ new_user_password }}"
     state: present
     shell: /bin/bash
     create_home: true

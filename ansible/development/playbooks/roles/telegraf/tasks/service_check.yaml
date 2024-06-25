@@ -1,0 +1,34 @@
+- name: Ensure telegraf is running
+  ansible.builtin.systemd:
+    name: telegraf
+    state: started
+  register: telegraf_status
+
+- name: Wait for telegraf port to be open
+  ansible.builtin.wait_for:
+    host: "{{ inventory_hostname }}"
+    port: "{{ telegraf_port }}"
+    timeout: 10
+  register: telegraf_port_status
+
+
+- name: Check telegraf endpoint
+  ansible.builtin.uri:
+    url: "http://localhost:{{ telegraf_port }}/metrics"
+    status_code: 200
+  register: telegraf_http_status
+
+- name: Aggregate service status
+  ansible.builtin.debug:
+    msg: >
+      telegraf: {{ telegraf_status }}
+
+- name: Aggregate port check results
+  ansible.builtin.debug:
+    msg: >
+      telegraf port: {{ telegraf_port_status }}
+
+- name: Aggregate HTTP endpoint results
+  ansible.builtin.debug:
+    msg: >
+      telegraf HTTP: {{ telegraf_http_status }}

@@ -1,48 +1,81 @@
 ---
 # tasks file for playbooks/roles/loki
+- name: Ensure loki user exists
+  ansible.builtin.user:
+    name: loki
+    state: present
+    shell: /usr/sbin/nologin
+    system: true
+
+- name: Ensure loki group exists
+  ansible.builtin.group:
+    name: loki
+    state: present
+    system: true
+
 - name: Create directories for Loki
-  file:
+  ansible.builtin.file:
     path: /opt/loki
     state: directory
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
 
+- name: Create required directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: loki
+    group: loki
+    mode: "0755"
+  loop:
+    - /tmp/loki/boltdb-shipper-active
+    - /tmp/loki/boltdb-shipper-cache
+    - /tmp/loki/chunks
 
 - name: Download Loki binary
-  get_url:
+  ansible.builtin.get_url:
     url: "https://github.com/grafana/loki/releases/download/v{{ loki_version }}/loki-linux-amd64.zip"
     dest: /tmp/loki-linux-amd64.zip
 
-
 - name: Unzip Loki binary
-  unarchive:
+  ansible.builtin.unarchive:
     src: /tmp/loki-linux-amd64.zip
     dest: /opt/loki/
-    remote_src: yes
+    remote_src: true
 
-- name: Set executable permissions for Loki, Prometheus, and Grafana
-  file:
+- name: Set executable permissions for Loki
+  ansible.builtin.file:
     path: /opt/loki/loki-linux-amd64
     state: file
     owner: root
     group: root
-    mode: '0755'
-    
+    mode: "0755"
+
 - name: Create Loki config file
-  ansible.builtin.template: 
+  ansible.builtin.template:
     dest: /opt/loki/loki-config.yaml
     src: loki-config.yaml.j2
-    group: root
-    mode: 0664
+    owner: loki
+    group: loki
+    mode: "0664"
 
-- name: Create loki systemd service
-  ansible.builtin.template: 
+- name: Create Loki systemd service
+  ansible.builtin.template:
     dest: /etc/systemd/system/loki.service
     src: loki.service.j2
+    owner: root
     group: root
-    mode: 0664
+    mode: "0664"
 
-  notify: 
-    - Reload systemd
-    - Enable and start Loki service
+- name: Reload systemctl
+  ansible.builtin.command: systemctl daemon-reload
+
+- name: Enable and start Loki service
+  ansible.builtin.systemd:
+    name: loki
+    enabled: true
+    state: started
+
+- name: Run Service Check
+  ansible.builtin.import_tasks: service_check.yaml

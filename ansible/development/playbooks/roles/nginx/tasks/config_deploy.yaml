@@ -6,8 +6,6 @@
     owner: root
     group: root
   when: stack == "frontend"
-  notify:
-    - Reload Nginx
 
 
 - name: Deploy Nginx site configuration - backend
@@ -18,8 +16,6 @@
     owner: root
     group: root
   when: stack == "backend"
-  notify:
-    - Reload Nginx
 
 - name: Enable site by creating a symbolic link
   ansible.builtin.file:
@@ -43,5 +39,3 @@
   ansible.builtin.service:
     name: nginx
     enabled: true
-  notify:
-    - Reload Nginx

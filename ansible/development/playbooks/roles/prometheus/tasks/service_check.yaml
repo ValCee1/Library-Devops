@@ -1,0 +1,34 @@
+- name: Ensure prometheus is running
+  ansible.builtin.systemd:
+    name: prometheus
+    state: started
+  register: prometheus_status
+
+- name: Wait for prometheus port to be open
+  ansible.builtin.wait_for:
+    host: "{{ inventory_hostname }}"
+    port: "{{ prometheus_port }}"
+    timeout: 10
+  register: prometheus_port_status
+
+
+- name: Check prometheus endpoint
+  ansible.builtin.uri:
+    url: "http://localhost:{{ prometheus_port }}/metrics"
+    status_code: 200
+  register: prometheus_http_status
+
+- name: Aggregate service status
+  ansible.builtin.debug:
+    msg: >
+      prometheus: {{ prometheus_status }}
+
+- name: Aggregate port check results
+  ansible.builtin.debug:
+    msg: >
+      prometheus port: {{ prometheus_port_status }}
+
+- name: Aggregate HTTP endpoint results
+  ansible.builtin.debug:
+    msg: >
+      prometheus HTTP: {{ prometheus_http_status }}

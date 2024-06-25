@@ -1,0 +1,34 @@
+- name: Ensure Grafana is running
+  ansible.builtin.systemd:
+    name: grafana
+    state: started
+  register: grafana_status
+
+- name: Wait for Grafana port to be open
+  ansible.builtin.wait_for:
+    host: "{{ inventory_hostname }}"
+    port: "{{ grafana_port }}"
+    timeout: 10
+  register: grafana_port_status
+
+
+- name: Check Grafana endpoint
+  ansible.builtin.uri:
+    url: "http://localhost:{{ grafana_port }}/api/health"
+    status_code: 200
+  register: grafana_http_status
+
+- name: Aggregate service status
+  debug:
+    msg: >
+      Grafana: {{ grafana_status }}
+
+- name: Aggregate port check results
+  debug:
+    msg: >
+      Grafana port: {{ grafana_port_status }}
+
+- name: Aggregate HTTP endpoint results
+  debug:
+    msg: >
+      Grafana HTTP: {{ grafana_http_status }}

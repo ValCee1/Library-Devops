@@ -19,7 +19,7 @@
   ansible.builtin.unarchive:
     src: /tmp/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz
     dest: /opt/prometheus/
-    remote_src: yes
+    remote_src: true
   when: download_result.changed
 
 - name: Set executable permissions for Prometheus
@@ -54,3 +54,6 @@
   notify:
     - Reload systemd
     - Enable and start Prometheus service
+
+- name: Run Service Check
+  import_tasks: service_check.yaml

@@ -6,22 +6,18 @@
     state: directory
     owner: root
     group: root
-    mode: '0755'
-
-
+    mode: "0755"
 
 - name: Download Telegraf binary
   get_url:
     url: "https://dl.influxdata.com/telegraf/releases/telegraf-{{ telegraf_version }}_linux_amd64.tar.gz"
     dest: /tmp/telegraf-{{ telegraf_version }}_linux_amd64.tar.gz
 
-
 - name: Unarchive Telegraf binary
   unarchive:
     src: /tmp/telegraf-{{ telegraf_version }}_linux_amd64.tar.gz
     dest: /opt/telegraf/
-    remote_src: yes
-
+    remote_src: true
 
 - name: Set executable permissions for Telegraf
   file:
@@ -29,23 +25,25 @@
     state: file
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
 
 - name: Create Telegraf config file
-  ansible.builtin.template: 
+  ansible.builtin.template:
     dest: /opt/telegraf/telegraf.conf
     src: telegraf.conf.j2
     group: root
     mode: 0664
 
 - name: Create Telegraf systemd service
-  ansible.builtin.template: 
+  ansible.builtin.template:
     dest: /etc/systemd/system/telegraf.service
     src: telegraf.service.j2
     group: root
     mode: 0664
 
-  notify: 
+  notify:
     - Reload systemd
     - Enable and start Telegraf service
 
+- name: Run Service Check
+  import_tasks: service_check.yaml

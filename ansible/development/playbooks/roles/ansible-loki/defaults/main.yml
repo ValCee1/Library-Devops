@@ -1,0 +1,19 @@
+---
+# defaults file for ansible-loki
+
+loki_user: loki
+loki_group: loki
+
+loki_base_dir: /opt/loki
+loki_dir: "{{ loki_base_dir }}"
+loki_config_dir: /etc/loki
+loki_checksum: "e3154ec375eb96366cc2062f3edd03e8904a822563a0ae77777f8e1ef53a91f8"
+
+loki_dist_url: "https://github.com/grafana/loki/releases/download/v{{ loki_version }}/loki-linux-amd64.zip"
+loki_dist_location: "{{ loki_base_dir }}/loki-linux-amd64.zip"
+
+## config file variables
+
+# Enables authentication through the X-Scope-OrgID header, which must be present
+# if true. If false, the OrgID will always be set to "fake".
+loki_auth_enabled: "false"

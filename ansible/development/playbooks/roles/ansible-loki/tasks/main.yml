@@ -1,0 +1,8 @@
+---
+# tasks file for ansible-loki
+
+- name: Run Loki Installation
+  ansible.builtin.import_tasks: loki_install.yml
+
+- name: Run Service Check
+  ansible.builtin.import_tasks: service_check.yaml
