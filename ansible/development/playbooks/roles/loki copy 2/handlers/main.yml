@@ -7,7 +7,3 @@
     name: loki.service
     state: restarted
     enabled: true
-
-- name: Reload systemctl
-  ansible.builtin.systemd:
-    daemon_reload: yes

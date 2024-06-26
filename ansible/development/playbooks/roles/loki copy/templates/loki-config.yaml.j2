@@ -3,7 +3,7 @@ auth_enabled: false
 
 server:
   http_listen_port: {{ loki_port }}
-  log_level: debug
+  log_level: debug  # Enable detailed logging for troubleshooting
 
 ingester:
   lifecycler:
@@ -11,7 +11,7 @@ ingester:
     ring:
       kvstore:
         store: inmemory
-      replication_factor: 1
+      replication_factor: 1   # Ensure replication_factor is under ring
     final_sleep: 0s
   chunk_idle_period: 5m
   chunk_retain_period: 30s
@@ -22,18 +22,18 @@ schema_config:
     - from: 2020-10-24
       store: boltdb-shipper
       object_store: filesystem
-      schema: v12
+      schema: v11
       index:
         prefix: index_
-        period: 24h
+        period: 168h
 
 storage_config:
   boltdb_shipper:
-    active_index_directory: {{ loki_active_index_dir }}
-    cache_location: {{ loki_cache_dir }}
+    active_index_directory: /tmp/loki/boltdb-shipper-active
+    cache_location: /tmp/loki/boltdb-shipper-cache
     cache_ttl: 24h
   filesystem:
-    directory: {{ loki_chunks_dir }}
+    directory: /tmp/loki/chunks
 
 limits_config:
   enforce_metric_name: false

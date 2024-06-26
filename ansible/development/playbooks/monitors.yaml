@@ -5,8 +5,18 @@
   gather_facts: true
   vars_files:
     - "~/private_files/var_files/my_secrets.yml"
+  vars:
+    loki_config_dir: "/etc/loki"
+    loki_config_file: "{{ loki_config_dir }}/config.yml"
+    loki_service_file: "/etc/systemd/system/loki.service"
+    loki_user: "loki"
+    loki_group: "loki"
+    loki_data_dir: "/tmp/loki"
+    loki_active_index_dir: "{{ loki_data_dir }}/boltdb-shipper-active"
+    loki_cache_dir: "{{ loki_data_dir }}/boltdb-shipper-cache"
+    loki_chunks_dir: "{{ loki_data_dir }}/chunks"
 
   roles:
-    - ansible-loki
+    - loki
     - prometheus
     - grafana

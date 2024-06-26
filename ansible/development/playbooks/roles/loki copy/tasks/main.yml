@@ -1,49 +1,91 @@
+---
+# tasks file for playbooks/roles/loki
 - name: Ensure loki user exists
   ansible.builtin.user:
-    name: "{{ loki_user }}"
+    name: loki
     state: present
     shell: /usr/sbin/nologin
     system: true
 
 - name: Ensure loki group exists
   ansible.builtin.group:
-    name: "{{ loki_group }}"
+    name: loki
     state: present
     system: true
 
-- name: Install Loki via apt
-  ansible.builtin.apt:
-    name: loki
-    state: present
-    update_cache: yes
+- name: Check if Loki default dir is present
+  ansible.builtin.stat:
+    path: "/tmp/loki/boltdb-shipper-active"
+  register: __default_structure
 
-- name: Ensure directory exists- {{ loki_config_dir }}
+- name: Default structure cleanup
+  when: __default_structure.stat.exists | bool
+  block:
+    - name: Ensure that Loki is stopped before default cleanup
+      ansible.builtin.systemd:
+        name: loki.service
+        state: stopped
+
+    - name: Remove default configuration from "/tmp/loki" directory
+      ansible.builtin.file:
+        path: "/tmp/loki"
+        state: absent
+
+- name: Create directories for Loki
   ansible.builtin.file:
-    path: "{{ loki_config_dir }}"
+    path: /opt/loki
     state: directory
-    owner: "{{ loki_user }}"
-    group: "{{ loki_group }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create required directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: loki
+    group: loki
+    mode: "0755"
+  loop:
+    - /tmp/loki/boltdb-shipper-active
+    - /tmp/loki/boltdb-shipper-cache
+    - /tmp/loki/chunks
+
+- name: Download Loki binary
+  ansible.builtin.get_url:
+    url: "https://github.com/grafana/loki/releases/download/v{{ loki_version }}/loki-linux-amd64.zip"
+    dest: /tmp/loki-linux-amd64.zip
+
+- name: Unzip Loki binary
+  ansible.builtin.unarchive:
+    src: /tmp/loki-linux-amd64.zip
+    dest: /opt/loki/
+    remote_src: true
+
+- name: Set executable permissions for Loki
+  ansible.builtin.file:
+    path: /opt/loki/loki-linux-amd64
+    state: file
+    owner: root
+    group: root
     mode: "0755"
 
 - name: Create Loki config file
   ansible.builtin.template:
-    dest: "{{ loki_config_file }}"
+    dest: /opt/loki/loki-config.yaml
     src: loki-config.yaml.j2
-    owner: "{{ loki_user }}"
-    group: "{{ loki_group }}"
+    owner: root
+    group: root
     mode: "0644"
-    validate: "/usr/bin/loki --config.file %s --verify-config"
+    validate: "/usr/bin/loki --verify-config -config.file %s"
 
 - name: Create Loki systemd service
   ansible.builtin.template:
-    dest: "{{ loki_service_file }}"
+    dest: /etc/systemd/system/loki.service
     src: loki.service.j2
     owner: root
     group: root
     mode: "0644"
-  notify:
-    - restart loki
-    - Reload systemctl
 
 - name: Reload systemctl
   ansible.builtin.command: systemctl daemon-reload

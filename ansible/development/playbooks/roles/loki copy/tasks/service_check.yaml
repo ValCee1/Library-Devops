@@ -1,0 +1,34 @@
+---
+- name: Ensure Loki is running
+  ansible.builtin.systemd:
+    name: loki
+    state: started
+  register: loki_status
+
+- name: Wait for Loki port to be open
+  ansible.builtin.wait_for:
+    host: "{{ inventory_hostname }}"
+    port: "{{ loki_port }}"
+    timeout: 30
+  register: loki_port_status
+
+- name: Check Loki endpoint
+  ansible.builtin.uri:
+    url: "http://localhost:{{ loki_port }}/ready"
+    status_code: 200
+  register: loki_http_status
+
+- name: Aggregate service status
+  ansible.builtin.debug:
+    msg: >
+      Loki: {{ loki_status }}
+
+- name: Aggregate port check results
+  ansible.builtin.debug:
+    msg: >
+      Loki port: {{ loki_port_status }}
+
+- name: Aggregate HTTP endpoint results
+  ansible.builtin.debug:
+    msg: >
+      Loki HTTP: {{ loki_http_status }}
