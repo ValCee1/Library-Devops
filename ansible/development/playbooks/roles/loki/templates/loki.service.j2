@@ -1,11 +1,24 @@
 [Unit]
-Description=Loki Log Aggregator
-After=network.target
+Description=Loki log aggregation system
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-Type=simple
-ExecStart=/usr/bin/loki -config.file {{ loki_config_file }}
-Restart=on-failure
+User=loki
+Group=loki
+ExecStart=/usr/local/bin/loki-linux-amd64 -config.file={{ loki_config_dir }}/loki-config.yml
+Restart=always
+RestartSec=5
+StartLimitInterval=0
+StartLimitBurst=5
+TimeoutStartSec=120
+
+# Hardening measures
+ProtectSystem=strict
+PrivateTmp=true
+PrivateDevices=true
+NoNewPrivileges=true
+ReadWritePaths={{ loki_data_dir }} {{ loki_wal_directory }}
 
 [Install]
 WantedBy=multi-user.target

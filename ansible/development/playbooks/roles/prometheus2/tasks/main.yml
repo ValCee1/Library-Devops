@@ -2,15 +2,13 @@
   ansible.builtin.group:
     name: "{{ prometheus_group }}"
     state: present
-    system: true
 
 - name: Ensure Prometheus user exists
   ansible.builtin.user:
     name: "{{ prometheus_user }}"
     group: "{{ prometheus_group }}"
-    system: true
-    create_home: false
-    shell: /sbin/nologin
+    system: yes
+    create_home: no
 
 - name: Create directories for Prometheus
   ansible.builtin.file:
@@ -19,55 +17,41 @@
     owner: "{{ prometheus_user }}"
     group: "{{ prometheus_group }}"
     mode: "0755"
-    recurse: true
   loop:
     - "{{ prometheus_install_dir }}"
     - "{{ prometheus_config_dir }}"
-    - "{{ prometheus_data_dir }}"
 
 - name: Download Prometheus binary
   ansible.builtin.get_url:
     url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
     dest: "{{ prometheus_tarball }}"
-    force: false
   register: download_result
-  until: download_result is succeeded
-  retries: 5
-  delay: 10
 
 - name: Unarchive Prometheus binary
   ansible.builtin.unarchive:
     src: "{{ prometheus_tarball }}"
-    dest: "{{ prometheus_install_dir }}"
+    dest: /tmp
     remote_src: true
-    owner: "{{ prometheus_user }}"
-    group: "{{ prometheus_group }}"
-    mode: "0755"
   when: download_result.changed
 
-- name: Set executable permissions for Prometheus binary
+- name: Move Prometheus files to install directory
+  ansible.builtin.command:
+    cmd: mv {{ prometheus_src_dir }}/* {{ prometheus_install_dir }}/
+  when: download_result.changed
+
+- name: Set executable permissions for Prometheus binaries
   ansible.builtin.file:
-    path: "{{ prometheus_bin_dir }}/prometheus"
+    path: "{{ prometheus_bin_path }}"
     state: file
     owner: "{{ prometheus_user }}"
     group: "{{ prometheus_group }}"
     mode: "0755"
 
-- name: Set executable permissions for Promtool binary
+- name: Clean up Prometheus tarball
   ansible.builtin.file:
-    path: "{{ prometheus_bin_dir }}/promtool"
-    state: file
-    owner: "{{ prometheus_user }}"
-    group: "{{ prometheus_group }}"
-    mode: "0755"
-
-- name: Create Prometheus config directory
-  ansible.builtin.file:
-    path: "{{ prometheus_config_dir }}"
-    state: directory
-    owner: "{{ prometheus_user }}"
-    group: "{{ prometheus_group }}"
-    mode: "0755"
+    path: "{{ prometheus_tarball }}"
+    state: absent
+  when: download_result.changed
 
 - name: Create Prometheus config file
   ansible.builtin.template:
@@ -76,7 +60,6 @@
     owner: "{{ prometheus_user }}"
     group: "{{ prometheus_group }}"
     mode: "0644"
-    validate: "{{ prometheus_bin_dir }}/promtool check config %s"
   notify: Restart Prometheus
 
 - name: Create Prometheus systemd service
@@ -98,15 +81,35 @@
   ansible.builtin.systemd:
     name: prometheus
     state: started
-    enabled: true
+    enabled: yes
 
-# - name: flush handlers
-#   ansible.builtin.meta: flush_handlers
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
 
-# - name: Verify Prometheus Installation
-#   ansible.builtin.import_tasks: verify.yaml
+- name: Verify Prometheus installation
+  ansible.builtin.command:
+    cmd: /opt/prometheus/promtool check config {{ prometheus_config_file }}
+  register: config_check
+  failed_when: config_check.rc != 0
+  changed_when: false
 
-- name: Remove Prometheus tarball
-  ansible.builtin.file:
-    path: "{{ prometheus_tarball }}"
-    state: absent
+- name: Display configuration check results
+  ansible.builtin.debug:
+    var: config_check
+
+- name: Check if Prometheus is listening on port 9090
+  ansible.builtin.wait_for:
+    host: localhost
+    port: "{{ prometheus_port }}"
+    delay: 5
+    timeout: 60
+
+- name: Try accessing Prometheus web interface
+  ansible.builtin.uri:
+    url: "http://localhost:{{ prometheus_port }}"
+    status_code: 200
+  register: web_interface
+
+- name: Display web interface access results
+  ansible.builtin.debug:
+    var: web_interface

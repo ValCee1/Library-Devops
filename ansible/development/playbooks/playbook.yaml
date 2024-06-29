@@ -7,8 +7,8 @@
 #   vars:
 #     stack: backend
 
-- name: Import Playbooks for Monitoring
-  ansible.builtin.import_playbook: monitors.yaml
+# - name: Import Playbooks for Monitoring
+#   ansible.builtin.import_playbook: monitors.yaml
 
 - name: Import Playbooks for monitored machines
   ansible.builtin.import_playbook: monitored.yaml

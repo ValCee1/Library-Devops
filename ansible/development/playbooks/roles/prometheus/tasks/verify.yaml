@@ -1,0 +1,97 @@
+- name: Verify Prometheus binary exists
+  ansible.builtin.stat:
+    path: "{{ prometheus_bin_dir }}/prometheus"
+  register: prometheus_binary_stat
+
+- name: Check Prometheus binary existence
+  ansible.builtin.fail:
+    msg: "Prometheus binary does not exist!"
+  when: not prometheus_binary_stat.stat.exists
+
+- name: Verify Promtool binary exists
+  ansible.builtin.stat:
+    path: "{{ prometheus_bin_dir }}/promtool"
+  register: promtool_binary_stat
+
+- name: Check Promtool binary existence
+  ansible.builtin.fail:
+    msg: "Promtool binary does not exist!"
+  when: not promtool_binary_stat.stat.exists
+
+- name: Verify Prometheus configuration
+  ansible.builtin.command:
+    cmd: "{{ prometheus_bin_dir }}/promtool check config {{ prometheus_config_file }}"
+  register: config_check
+  failed_when: config_check.rc != 0
+  changed_when: false
+
+- name: Display configuration check results
+  ansible.builtin.debug:
+    var: config_check
+
+- name: Check Prometheus service status
+  ansible.builtin.systemd:
+    name: prometheus
+    state: started
+    enabled: yes
+  register: prometheus_service_status
+
+- name: Display Prometheus service status
+  ansible.builtin.debug:
+    var: prometheus_service_status
+    
+- name: Check if Prometheus is listening on port {{ prometheus_port }}
+  ansible.builtin.wait_for:
+    host: localhost
+    port: "{{ prometheus_port }}"
+    delay: 5
+    timeout: 60
+
+- name: Fetch Prometheus service logs
+  ansible.builtin.shell: journalctl -u prometheus --no-pager
+  register: prometheus_service_logs
+  failed_when: false
+
+- name: Display Prometheus service logs
+  ansible.builtin.debug:
+    var: prometheus_service_logs.stdout_lines
+
+- name: Verify Prometheus systemd service file path
+  ansible.builtin.shell: grep ExecStart /etc/systemd/system/prometheus.service
+  register: prometheus_execstart
+  failed_when: false
+
+- name: Display Prometheus ExecStart path
+  ansible.builtin.debug:
+    var: prometheus_execstart.stdout_lines
+
+- name: Revalidate Prometheus configuration
+  ansible.builtin.command:
+    cmd: "{{ prometheus_bin_dir }}/promtool check config {{ prometheus_config_file }}"
+  register: config_recheck
+  failed_when: config_recheck.rc != 0
+  changed_when: false
+
+- name: Display revalidation results
+  ansible.builtin.debug:
+    var: config_recheck
+
+- name: Check if port is being used
+  ansible.builtin.shell: netstat -tuln | grep {{ prometheus_port }}
+  register: port_check_netstat
+  failed_when: false
+
+- name: Display port check results
+  ansible.builtin.debug:
+    var: port_check_netstat.stdout_lines
+
+- name: Try accessing Prometheus web interface
+  ansible.builtin.uri:
+    url: "http://localhost:{{ prometheus_port }}"
+    status_code: 200
+  register: web_interface
+
+- name: Display web interface access results
+  ansible.builtin.debug:
+    var: web_interface
+

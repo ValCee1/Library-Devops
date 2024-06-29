@@ -1,13 +1,16 @@
 ---
 # tasks file for roles/grafana
-
 - name: Create directories for Grafana
   ansible.builtin.file:
-    path: /opt/grafana
+    path: "{{ item }}"
     state: directory
     owner: root
     group: root
     mode: "0755"
+    recurse: true
+  loop:
+    - /opt/grafana
+    - /opt/grafana/conf
 
 - name: Download Grafana binary
   ansible.builtin.get_url:
@@ -39,5 +42,13 @@
     - Reload systemd
     - Enable and start Grafana service
 
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
+
 - name: Run Service Check
   import_tasks: service_check.yaml
+
+- name: Remove Prometheus tarball
+  ansible.builtin.file:
+    path: "/tmp/grafana-{{ grafana_version }}.linux-amd64.tar.gz"
+    state: absent

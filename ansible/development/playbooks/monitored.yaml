@@ -1,5 +1,5 @@
 - name: Set up monitoring tools for monitored machines
-  hosts: monitored
+  hosts: monitor
   remote_user: "{{ new_username }}"
   become: true
   gather_facts: true

@@ -1,0 +1,85 @@
+- name: Ensure loki user exists
+  ansible.builtin.user:
+    name: "{{ loki_user }}"
+    state: present
+    shell: /usr/sbin/nologin
+    system: true
+
+- name: Ensure loki group exists
+  ansible.builtin.group:
+    name: "{{ loki_group }}"
+    state: present
+    system: true
+
+- name: Install Loki via apt
+  ansible.builtin.apt:
+    name: loki
+    state: present
+    update_cache: yes
+
+- name: Ensure directory exists- {{ loki_config_dir }}
+  ansible.builtin.file:
+    path: "{{ loki_config_dir }}"
+    state: directory
+    owner: "{{ loki_user }}"
+    group: "{{ loki_group }}"
+    mode: "0755"
+
+- name: Create Loki config file
+  ansible.builtin.template:
+    dest: "{{ loki_config_file }}"
+    src: loki-config.yaml.j2
+    owner: "{{ loki_user }}"
+    group: "{{ loki_group }}"
+    mode: "0644"
+    validate: "/usr/bin/loki --config.file %s --verify-config"
+
+- name: Create Loki systemd service
+  ansible.builtin.template:
+    dest: "{{ loki_service_file }}"
+    src: loki.service.j2
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - restart loki
+    - Reload systemctl
+
+- name: Reload systemctl
+  ansible.builtin.command: systemctl daemon-reload
+
+- name: Get firewalld state
+  ansible.builtin.systemd:
+    name: "firewalld"
+  register: __firewalld_service_state
+
+- name: Enable firewalld rule to expose Loki tcp port {{ loki_http_listen_port }}
+  ansible.posix.firewalld:
+    immediate: true
+    permanent: true
+    port: "{{ loki_http_listen_port }}/tcp"
+    state: enabled
+  when:
+    - __firewalld_service_state.status.ActiveState == "active"
+    - loki_expose_port | bool
+
+- name: Ensure that Loki firewalld rule is not present - tcp port {{ loki_http_listen_port }}
+  ansible.posix.firewalld:
+    immediate: true
+    permanent: true
+    port: "{{ loki_http_listen_port }}/tcp"
+    state: disabled
+  when:
+    - __firewalld_service_state.status.ActiveState == "active"
+    - not loki_expose_port | bool
+
+- name: Flush handlers after deployment
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure that Loki is started
+  ansible.builtin.systemd:
+    name: loki.service
+    state: started
+
+- name: Run Service Check
+  ansible.builtin.import_tasks: service_check.yaml

@@ -1,85 +1,84 @@
-- name: Ensure loki user exists
-  ansible.builtin.user:
-    name: "{{ loki_user }}"
-    state: present
-    shell: /usr/sbin/nologin
-    system: true
-
-- name: Ensure loki group exists
-  ansible.builtin.group:
-    name: "{{ loki_group }}"
-    state: present
-    system: true
-
-- name: Install Loki via apt
-  ansible.builtin.apt:
+---
+- name: Create Loki user
+  user:
     name: loki
-    state: present
-    update_cache: yes
+    system: yes
+    create_home: no
 
-- name: Ensure directory exists- {{ loki_config_dir }}
-  ansible.builtin.file:
-    path: "{{ loki_config_dir }}"
+- name: Create Loki directories
+  file:
+    path: "{{ item }}"
     state: directory
-    owner: "{{ loki_user }}"
-    group: "{{ loki_group }}"
+    owner: loki
+    group: loki
     mode: "0755"
+  loop:
+    - "{{ loki_config_dir }}"
+    - "{{ loki_data_dir }}"
+    - "{{ loki_wal_directory }}"
 
-- name: Create Loki config file
-  ansible.builtin.template:
-    dest: "{{ loki_config_file }}"
-    src: loki-config.yaml.j2
-    owner: "{{ loki_user }}"
-    group: "{{ loki_group }}"
+- name: Set correct permissions for Loki data directory
+  file:
+    path: "{{ loki_data_dir }}"
+    owner: loki
+    group: loki
+    mode: "0755"
+    recurse: yes
+
+- name: Check if Loki is already installed
+  stat:
+    path: /usr/local/bin/loki-linux-amd64
+  register: loki_binary
+
+- name: Download Loki binary
+  get_url:
+    url: "https://github.com/grafana/loki/releases/download/v{{ loki_version }}/loki-linux-amd64.zip"
+    dest: "/tmp/loki-{{ loki_version }}.zip"
+  when: not loki_binary.stat.exists
+
+- name: Unzip Loki binary
+  unarchive:
+    src: "/tmp/loki-{{ loki_version }}.zip"
+    dest: "/usr/local/bin"
+    remote_src: yes
+    mode: "0755"
+    owner: root
+    group: root
+  when: not loki_binary.stat.exists
+
+- name: Create Loki configuration file
+  template:
+    src: loki-config.yml.j2
+    dest: "{{ loki_config_dir }}/loki-config.yml"
+    owner: loki
+    group: loki
     mode: "0644"
-    validate: "/usr/bin/loki --config.file %s --verify-config"
+  notify: Restart Loki
 
-- name: Create Loki systemd service
-  ansible.builtin.template:
-    dest: "{{ loki_service_file }}"
+- name: Create Loki systemd service file
+  template:
     src: loki.service.j2
+    dest: /etc/systemd/system/loki.service
     owner: root
     group: root
     mode: "0644"
   notify:
-    - restart loki
-    - Reload systemctl
+    - Reload systemd
+    - Restart Loki
 
-- name: Reload systemctl
-  ansible.builtin.command: systemctl daemon-reload
-
-- name: Get firewalld state
-  ansible.builtin.systemd:
-    name: "firewalld"
-  register: __firewalld_service_state
-
-- name: Enable firewalld rule to expose Loki tcp port {{ loki_http_listen_port }}
-  ansible.posix.firewalld:
-    immediate: true
-    permanent: true
-    port: "{{ loki_http_listen_port }}/tcp"
-    state: enabled
-  when:
-    - __firewalld_service_state.status.ActiveState == "active"
-    - loki_expose_port | bool
-
-- name: Ensure that Loki firewalld rule is not present - tcp port {{ loki_http_listen_port }}
-  ansible.posix.firewalld:
-    immediate: true
-    permanent: true
-    port: "{{ loki_http_listen_port }}/tcp"
-    state: disabled
-  when:
-    - __firewalld_service_state.status.ActiveState == "active"
-    - not loki_expose_port | bool
-
-- name: Flush handlers after deployment
-  ansible.builtin.meta: flush_handlers
-
-- name: Ensure that Loki is started
-  ansible.builtin.systemd:
-    name: loki.service
+- name: Start and enable Loki service
+  systemd:
+    name: loki
     state: started
+    enabled: yes
 
-- name: Run Service Check
-  ansible.builtin.import_tasks: service_check.yaml
+# - name: flush handlers
+#   ansible.builtin.meta: flush_handlers
+
+# - name: Verify loki Installation
+#   ansible.builtin.import_tasks: verify.yaml
+
+- name: Remove Loki zip file
+  file:
+    path: "/tmp/loki-{{ loki_version }}.zip"
+    state: absent

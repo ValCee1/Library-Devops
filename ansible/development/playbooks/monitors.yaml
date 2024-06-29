@@ -5,18 +5,22 @@
   gather_facts: true
   vars_files:
     - "~/private_files/var_files/my_secrets.yml"
+
   vars:
     loki_config_dir: "/etc/loki"
-    loki_config_file: "{{ loki_config_dir }}/config.yml"
-    loki_service_file: "/etc/systemd/system/loki.service"
-    loki_user: "loki"
-    loki_group: "loki"
-    loki_data_dir: "/tmp/loki"
-    loki_active_index_dir: "{{ loki_data_dir }}/boltdb-shipper-active"
-    loki_cache_dir: "{{ loki_data_dir }}/boltdb-shipper-cache"
-    loki_chunks_dir: "{{ loki_data_dir }}/chunks"
+    loki_data_dir: "/var/lib/loki"
+    loki_wal_directory: "/var/lib/loki/wal"
+    prometheus_install_dir: "/opt/prometheus"
+    prometheus_bin_dir: "{{ prometheus_install_dir }}/prometheus-{{ prometheus_version }}.linux-amd64"
+    prometheus_config_dir: "/etc/prometheus"
+    prometheus_data_dir: "{{ prometheus_install_dir }}/data" # This is the directory where Prometheus stores its data.
+    prometheus_service_file: "/etc/systemd/system/prometheus.service"
+    prometheus_config_file: "{{ prometheus_config_dir }}/prometheus.yml"
+    prometheus_tarball: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+    prometheus_user: "prometheus"
+    prometheus_group: "prometheus"
 
   roles:
-    - loki
-    - prometheus
     - grafana
+    - prometheus
+    - loki

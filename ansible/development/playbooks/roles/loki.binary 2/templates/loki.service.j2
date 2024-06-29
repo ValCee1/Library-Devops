@@ -1,0 +1,13 @@
+[Unit]
+Description=Loki Log Aggregator
+After=network.target
+
+[Service]
+User={{ loki_user }}
+Group={{ loki_group }}
+ExecStart={{ loki_install_dir }}/loki -config.file={{ loki_config_file }}
+Restart=always
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

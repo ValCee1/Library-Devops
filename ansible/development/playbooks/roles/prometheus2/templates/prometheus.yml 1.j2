@@ -2,6 +2,17 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:{{ prometheus_port }}']
+
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['localhost:{{ loki_port }}']
+
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['localhost:{{ grafana_port }}']
 
   - job_name: 'node_exporter'
     static_configs:
@@ -29,25 +40,4 @@ scrape_configs:
       - targets:
 {% for host in groups['monitored'] %}
         - '{{ hostvars[host].ansible_host }}:{{ telegraf_port }}'
-{% endfor %}
-
-  - job_name: 'loki'
-    static_configs:
-      - targets:
-{% for host in groups['monitors'] %}
-        - '{{ hostvars[host].ansible_host }}:{{ loki_port }}'
-{% endfor %}
-
-  - job_name: 'grafana'
-    static_configs:
-      - targets:
-{% for host in groups['monitors'] %}
-        - '{{ hostvars[host].ansible_host }}:{{ grafana_port }}'
-{% endfor %}
-
-  - job_name: 'prometheus'
-    static_configs:
-      - targets:
-{% for host in groups['monitors'] %}
-        - '{{ hostvars[host].ansible_host }}:{{ prometheus_port }}'
 {% endfor %}

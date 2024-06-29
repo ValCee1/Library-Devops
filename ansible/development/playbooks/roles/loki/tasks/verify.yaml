@@ -1,0 +1,68 @@
+- name: Check Loki service logs
+  command: journalctl -u loki -n 50 --no-pager
+  register: loki_logs
+  changed_when: false
+
+- name: Display Loki logs
+  debug:
+    var: loki_logs.stdout_lines
+
+- name: Verify Loki configuration
+  command: /usr/local/bin/loki-linux-amd64 -config.file={{ loki_config_dir }}/loki-config.yml -print-config-stderr
+  register: loki_config_check
+  changed_when: false
+  failed_when: false
+
+- name: Display Loki configuration check results
+  debug:
+    var: loki_config_check.stderr_lines
+
+- name: Check Loki directory permissions
+  stat:
+    path: "{{ item }}"
+  loop:
+    - "{{ loki_config_dir }}"
+    - "{{ loki_data_dir }}"
+  register: loki_dir_stats
+
+- name: Display Loki directory permissions
+  debug:
+    var: loki_dir_stats.results
+
+- name: Check Loki binary
+  stat:
+    path: /usr/local/bin/loki-linux-amd64
+  register: loki_binary_stat
+
+- name: Display Loki binary information
+  debug:
+    var: loki_binary_stat
+
+- name: "Check if port {{ loki_port }} is in use"
+  wait_for:
+    port: "{{ loki_port }}"
+    timeout: 1
+  register: port_check
+  failed_when: false
+
+- name: Display port check results
+  debug:
+    var: port_check
+
+- name: Check Loki service status
+  command: systemctl is-active loki
+  register: loki_status
+  changed_when: false
+  failed_when: loki_status.rc != 0
+
+- name: "Verify Loki is listening on port {{ loki_port }}"
+  wait_for:
+    port: "{{ loki_port }}"
+    timeout: 30
+
+- name: Test Loki API
+  uri:
+    url: "http://localhost:{{ loki_port }}/ready"
+    method: GET
+  register: loki_api_response
+  failed_when: loki_api_response.status != 200

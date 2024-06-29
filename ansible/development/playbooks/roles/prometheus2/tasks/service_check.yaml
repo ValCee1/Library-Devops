@@ -1,0 +1,94 @@
+
+- name: Check Prometheus service status
+  systemd:
+    name: prometheus
+    state: started
+  register: prometheus_status
+  ignore_errors: yes
+
+- name: Display Prometheus service status
+  debug:
+    var: prometheus_status
+
+- name: Collect Prometheus logs
+  command: journalctl -u prometheus -n 50 --no-pager
+  register: prometheus_logs
+  changed_when: false
+
+- name: Display Prometheus logs
+  debug:
+    var: prometheus_logs.stdout_lines
+
+- name: Verify Prometheus configuration
+  command: /opt/prometheus/promtool check config /opt/prometheus/prometheus.yml 
+  register: config_check
+  changed_when: false
+  ignore_errors: true
+
+- name: Display configuration check results
+  debug:
+    var: config_check
+
+- name: Check if Prometheus is listening on port 9090
+  wait_for:
+    port: 9090
+    timeout: 5
+  register: port_check
+  ignore_errors: true
+
+- name: Display port check results
+  debug:
+    var: port_check
+
+- name: Try accessing Prometheus web interface
+  uri:
+    url: http://localhost:9090
+    return_content: true
+  register: web_interface
+  ignore_errors: true
+
+- name: Display web interface access results
+  debug:
+    var: web_interface
+
+- name: Check Prometheus targets
+  uri:
+    url: http://localhost:9090/api/v1/targets
+    return_content: true
+  register: targets
+  ignore_errors: true
+
+- name: Display targets information
+  debug:
+    var: targets.json.data.activeTargets
+
+- name: Query Prometheus metrics
+  uri:
+    url: "http://localhost:9090/api/v1/query?query=up"
+    return_content: yes
+  register: metrics
+  ignore_errors: yes
+
+- name: Display metrics query results
+  debug:
+    var: metrics.json.data.result
+
+- name: Check firewall status for port 9090
+  command: iptables -L -n
+  register: firewall_status
+  changed_when: false
+
+- name: Display firewall status
+  debug:
+    var: firewall_status.stdout_lines
+
+- name: Summarize Prometheus health
+  debug:
+    msg: |
+      Prometheus Health Summary:
+      - Service Status: {{ 'Running' if prometheus_status.state == 'started' else 'Not Running' }}
+      - Configuration Valid: {{ 'Yes' if config_check.rc == 0 else 'No' }}
+      - Listening on Port 9090: {{ 'Yes' if port_check.state == 'started' else 'No' }}
+      - Web Interface Accessible: {{ 'Yes' if web_interface.status == 200 else 'No' }}
+      - Targets Available: {{ 'Yes' if targets.json.data.activeTargets | length > 0 else 'No' }}
+      - Metrics Queryable: {{ 'Yes' if metrics.json.data.result | length > 0 else 'No' }}

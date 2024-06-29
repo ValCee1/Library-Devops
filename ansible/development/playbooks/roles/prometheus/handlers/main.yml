@@ -1,11 +1,4 @@
----
-# handlers file for playbooks/roles/prometheus
-- name: Reload systemd
-  ansible.builtin.command: systemctl daemon-reload
-
-- name: Enable and start Prometheus service
-  ansible.builtin.systemd:
+- name: Restart Prometheus
+  service:
     name: prometheus
-    enabled: true
-    state: started
-    daemon_reload: true
+    state: restarted

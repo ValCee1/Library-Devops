@@ -4,29 +4,28 @@
     state: started
   register: promtail_status
 
-- name: Wait for promtail port to be open
-  ansible.builtin.wait_for:
-    host: "{{ inventory_hostname }}"
+- name: Aggregate service status
+  ansible.builtin.debug:
+    msg: >
+      promtail: {{ promtail_status }}
+
+- name: "Verify promtail is listening on port {{ promtail_port }}"
+  wait_for:
     port: "{{ promtail_port }}"
-    timeout: 10
+    timeout: 30
   register: promtail_port_status
 
+
+- name: Aggregate port check results
+  ansible.builtin.debug:
+    msg: >
+      promtail port: {{ promtail_port_status }}
 
 - name: Check promtail endpoint
   ansible.builtin.uri:
     url: "http://localhost:{{ promtail_port }}/ready"
     status_code: 200
   register: promtail_http_status
-
-- name: Aggregate service status
-  ansible.builtin.debug:
-    msg: >
-      promtail: {{ promtail_status }}
-
-- name: Aggregate port check results
-  ansible.builtin.debug:
-    msg: >
-      promtail port: {{ promtail_port_status }}
 
 - name: Aggregate HTTP endpoint results
   ansible.builtin.debug:
