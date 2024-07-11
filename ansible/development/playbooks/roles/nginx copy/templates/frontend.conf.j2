@@ -1,0 +1,34 @@
+server {
+    {% if cert_path  %}
+        listen 443 ssl;
+        ssl_certificate /etc/certs/live/{{ cert_domain }}/fullchain.pem;
+        ssl_certificate_key /etc/certs/live/{{ cert_domain }}/privkey.pem;
+    {% else %}
+    listen 80;
+    {% endif %}
+
+    root {{ root | default('/var/www/html') }};
+    index index.php index.html index.htm index.nginx-debian.html;
+    server_name {{ server_names | join(' ') }};
+
+    location / {
+        try_files $uri $uri /index.html?$query_string;
+    }
+
+        # Enable Gzip compression for faster loading
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+    gzip_proxied any;
+    gzip_vary on;
+}
+
+{% if cert_path  %}
+# Redirect HTTP to HTTPS
+server {
+    listen 80;
+    server_name {{ server_names | join(' ') }};
+    return 301 https://$host$request_uri;
+}
+{% endif %}
+
+

@@ -1,49 +1,75 @@
 ---
-# tasks file for playbooks/roles/telegraf
-- name: Create directory for Telegraf
-  file:
-    path: /opt/telegraf
+# tasks/install_telegraf.yaml
+- name: Ensure telegraf group exists
+  ansible.builtin.group:
+    name: "{{ telegraf_group }}"
+    state: present
+    system: true
+
+- name: Ensure telegraf user exists
+  ansible.builtin.user:
+    name: "{{ telegraf_user }}"
+    group: "{{ telegraf_group }}"
+    system: true
+    create_home: false
+    shell: /sbin/nologin
+
+- name: Create directories for telegraf
+  ansible.builtin.file:
+    path: "{{ item }}"
     state: directory
-    owner: root
-    group: root
+    owner: "{{ telegraf_user }}"
+    group: "{{ telegraf_group }}"
     mode: "0755"
+    recurse: true
+  loop:
+    - "{{ telegraf_download_dir }}"
+    - "{{ telegraf_config_dir }}"
+    - "{{ telegraf_data_dir }}"
 
 - name: Download Telegraf binary
-  get_url:
+  ansible.builtin.get_url:
     url: "https://dl.influxdata.com/telegraf/releases/telegraf-{{ telegraf_version }}_linux_amd64.tar.gz"
-    dest: /tmp/telegraf-{{ telegraf_version }}_linux_amd64.tar.gz
+    dest: "{{ telegraf_binary_path }}"
 
 - name: Unarchive Telegraf binary
-  unarchive:
-    src: /tmp/telegraf-{{ telegraf_version }}_linux_amd64.tar.gz
-    dest: /opt/telegraf/
+  ansible.builtin.unarchive:
+    src: "{{ telegraf_binary_path }}"
+    dest: "{{ telegraf_download_dir }}/"
     remote_src: true
+    extra_opts: [--strip-components=2] # Adjust based on archive structure
 
 - name: Set executable permissions for Telegraf
-  file:
-    path: /opt/telegraf/telegraf-{{ telegraf_version }}/usr/bin/telegraf
-    state: file
+  ansible.builtin.file:
+    # path: "{{ telegraf_download_dir }}/usr/bin/telegraf"
+    state: link
+    src: "{{ telegraf_download_dir }}/usr/bin/telegraf"
+    dest: /usr/bin/telegraf
     owner: root
     group: root
     mode: "0755"
 
-- name: Create Telegraf config file
+- name: Create Telegraf configuration file
   ansible.builtin.template:
-    dest: /opt/telegraf/telegraf.conf
     src: telegraf.conf.j2
+    dest: "{{ telegraf_config_file }}"
+    owner: root
     group: root
-    mode: 0664
+    mode: "0644"
+  notify: Restart Telegraf
 
 - name: Create Telegraf systemd service
   ansible.builtin.template:
-    dest: /etc/systemd/system/telegraf.service
     src: telegraf.service.j2
+    dest: /etc/systemd/system/telegraf.service
+    owner: root
     group: root
-    mode: 0664
-
+    mode: "0644"
   notify:
     - Reload systemd
     - Enable and start Telegraf service
+# - name: flush handlers
+#   ansible.builtin.meta: flush_handlers
 
-- name: Run Service Check
-  import_tasks: service_check.yaml
+# - name: Verify Installation
+#   import_tasks: verify.yaml

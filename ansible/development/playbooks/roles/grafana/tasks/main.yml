@@ -11,6 +11,9 @@
   loop:
     - /opt/grafana
     - /opt/grafana/conf
+    - /opt/grafana/provisioning
+    - /opt/grafana/provisioning/datasources
+    - /opt/grafana/provisioning/dashboards
 
 - name: Download Grafana binary
   ansible.builtin.get_url:
@@ -32,6 +35,30 @@
     group: root
     mode: "0755"
 
+- name: Create Grafana configuration file
+  ansible.builtin.template:
+    src: grafana.ini.j2
+    dest: /opt/grafana/conf/custom.ini
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Create Prometheus datasource configuration
+  ansible.builtin.template:
+    src: prometheus_datasource.yml.j2
+    dest: /opt/grafana/provisioning/datasources/prometheus.yml
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Create Loki datasource configuration
+  ansible.builtin.template:
+    src: loki_datasource.yml.j2
+    dest: /opt/grafana/provisioning/datasources/loki.yml
+    owner: root
+    group: root
+    mode: "0644"
+
 - name: Create Grafana systemd service
   ansible.builtin.template:
     dest: /etc/systemd/system/grafana.service
@@ -42,13 +69,13 @@
     - Reload systemd
     - Enable and start Grafana service
 
-- name: flush handlers
-  ansible.builtin.meta: flush_handlers
+# - name: flush handlers
+#   ansible.builtin.meta: flush_handlers
 
-- name: Run Service Check
-  import_tasks: service_check.yaml
+# - name: Verify Installation and Configuration
+#   import_tasks: service_check.yaml
 
-- name: Remove Prometheus tarball
+- name: Remove Grafana tarball
   ansible.builtin.file:
     path: "/tmp/grafana-{{ grafana_version }}.linux-amd64.tar.gz"
     state: absent

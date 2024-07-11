@@ -1,11 +1,14 @@
 [Unit]
 Description=Telegraf
+Documentation=https://github.com/influxdata/telegraf
 After=network.target
 
 [Service]
-ExecStart=/opt/telegraf/telegraf-{{ telegraf_version }}/usr/bin/telegraf --config /opt/telegraf/telegraf.conf
-Restart=always
-User=root
+ExecStart=/usr/bin/telegraf --config {{ telegraf_config_file }}
+User=telegraf
+Group=telegraf
+Restart=on-failure
+EnvironmentFile=-/etc/default/telegraf
 
 [Install]
 WantedBy=multi-user.target

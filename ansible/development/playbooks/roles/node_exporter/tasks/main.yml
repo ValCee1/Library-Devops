@@ -1,0 +1,56 @@
+---
+# tasks file for playbooks/roles/node-exporter
+
+- name: Download node_exporter
+  get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v1.5.0/node_exporter-1.5.0.linux-amd64.tar.gz"
+    dest: "/tmp/node_exporter.tar.gz"
+
+- name: Extract node_exporter
+  unarchive:
+    src: "/tmp/node_exporter.tar.gz"
+    dest: "/tmp"
+    remote_src: yes
+
+- name: Move node_exporter binary to /usr/local/bin
+  copy:
+    src: "/tmp/node_exporter-1.5.0.linux-amd64/node_exporter"
+    dest: "/usr/local/bin/node_exporter"
+    mode: "0755"
+    remote_src: yes
+
+- name: Create node_exporter systemd service file
+  template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+  notify: Restart node_exporter
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Start and enable node_exporter service
+  systemd:
+    name: node_exporter
+    state: started
+    enabled: yes
+
+- name: Wait for node_exporter service to start
+  wait_for:
+    port: 9100
+    timeout: 30
+
+- name: Check node_exporter service status
+  command: systemctl is-active node_exporter
+  register: node_exporter_status
+  changed_when: false
+  failed_when: false
+
+- name: Verify node_exporter service status
+  assert:
+    that:
+      - node_exporter_status.stdout == "active"
+    fail_msg: "node_exporter service is not running. Status: {{ node_exporter_status.stdout }}"
+
+- name: Run Service Check
+  import_tasks: verify.yaml

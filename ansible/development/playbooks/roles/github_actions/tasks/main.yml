@@ -1,4 +1,3 @@
-
 - name: Create actions-runner directory
   file:
     path: "{{ github_actions_folder }}"
@@ -27,7 +26,6 @@
     remote_src: true
     owner: "{{ new_username }}"
     group: "{{ new_username }}"
-
 # - name: Create runner and start configuration
 #   shell: "./config.sh --url {{ github_repo_https_link }} --token {{ github_token }}"
 #   args:

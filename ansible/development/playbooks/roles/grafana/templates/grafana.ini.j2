@@ -1,0 +1,13 @@
+[server]
+http_addr = 0.0.0.0
+http_port = {{ grafana_port }}
+
+[security]
+admin_user = {{ grafana_admin_username }}
+admin_password = {{ grafana_admin_password }}
+
+[auth.anonymous]
+enabled = false
+
+[paths]
+provisioning = /opt/grafana/provisioning

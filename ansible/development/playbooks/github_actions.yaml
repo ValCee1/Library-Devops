@@ -8,7 +8,7 @@
   tasks:
     - name: Create actions-runner directory
       file:
-        path: "{{ github_actions_folder }}"
+        path: "{{ github_actions_folder }}/"
         state: directory
         owner: "{{ new_username }}"
         group: "{{ new_username }}"
@@ -16,21 +16,21 @@
     - name: Download the latest runner package
       get_url:
         url: https://github.com/actions/runner/releases/download/v2.316.1/actions-runner-linux-x64-2.316.1.tar.gz
-        dest: "{{ github_actions_folder }}actions-runner-linux-x64-2.316.1.tar.gz"
+        dest: "{{ github_actions_folder }}/actions-runner-linux-x64-2.316.1.tar.gz"
         owner: "{{ new_username }}"
         group: "{{ new_username }}"
 
     - name: Validate the hash (Optional)
-      shell: echo "d62de2400eeeacd195db91e2ff011bfb646cd5d85545e81d8f78c436183e09a8  {{ github_actions_folder }}actions-runner-linux-x64-2.316.1.tar.gz" | shasum -a 256 -c
+      shell: echo "d62de2400eeeacd195db91e2ff011bfb646cd5d85545e81d8f78c436183e09a8  {{ github_actions_folder }}/actions-runner-linux-x64-2.316.1.tar.gz" | shasum -a 256 -c
       args:
-        chdir: "{{ github_actions_folder }}"
+        chdir: "{{ github_actions_folder }}/"
       register: checksum_result
       failed_when: checksum_result.rc != 0
 
     - name: Extract the installer
       unarchive:
-        src: "{{ github_actions_folder }}actions-runner-linux-x64-2.316.1.tar.gz"
-        dest: "{{ github_actions_folder }}"
+        src: "{{ github_actions_folder }}/actions-runner-linux-x64-2.316.1.tar.gz"
+        dest: "{{ github_actions_folder }}/"
         remote_src: true
         owner: "{{ new_username }}"
         group: "{{ new_username }}"
@@ -38,7 +38,7 @@
     # - name: Create runner and start configuration
     #   shell: "./config.sh --url {{ github_repo_https_link }} --token {{ github_token }}"
     #   args:
-    #     chdir: "{{ github_actions_folder }}"
+    #     chdir: "{{ github_actions_folder }}/"
     #   register: config_result
     #   failed_when: config_result.rc != 0
     #   become: false
@@ -46,7 +46,7 @@
     # - name: Run the GitHub Actions runner
     #   shell: ./run.sh
     #   args:
-    #     chdir: "{{ github_actions_folder }}"
+    #     chdir: "{{ github_actions_folder }}/"
     #   async: 0
     #   poll: 0
     #   register: run_result

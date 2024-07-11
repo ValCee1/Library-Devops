@@ -1,0 +1,33 @@
+---
+# tasks file for nodejs-latest
+
+- name: Add NodeSource repository for Node.js version {{ node_version }}
+  ansible.legacy.shell: "curl -fsSL https://deb.nodesource.com/setup_{{ node_version }}.x | bash -"
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+
+- name: Validate required variables
+  fail:
+    msg: "Required variables not set"
+  when:
+    - DB_USERNAME is not defined
+    - DB_PASSWORD is not defined
+    - backend_port is not defined
+    - frontend_port is not defined
+    - admin_Mail is not defined
+    - mail_Password is not defined
+
+- name: Run Backend deployment tasks
+  import_tasks: deploy-backend.yml
+  when: stack == "backend"
+
+- name: Run frontend deployment tasks
+  import_tasks: deploy-frontend.yml
+  when: stack == "frontend"
+
+- name: Verify NodeJS and PM2 Installation and configuration
+  ansible.builtin.include_tasks:
+    file: verify.yaml

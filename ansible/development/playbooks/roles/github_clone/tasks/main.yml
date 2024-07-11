@@ -1,52 +1,45 @@
----
-
-- name: Remove any existing repo in the destination folder
-  ansible.builtin.command:
-    cmd: "rm -rf {{ frontend_project_folder }}"
-  ignore_errors: true
-
-- name: Ensure the destination folder exists after cleanup
+- name: Ensure the destination folder exists
   ansible.builtin.file:
-    path: "{{ frontend_project_folder }}"
+    path: "{{ source_folder }}"
     state: directory
-    mode: "7777"
+    mode: "0755"
     owner: "{{ new_username }}"
     group: "{{ new_username }}"
 
 - name: Configure Git to trust the destination folder
   ansible.builtin.command:
-    cmd: "git config --global --add safe.directory {{ frontend_project_folder }}"
+    cmd: "git config --global --add safe.directory {{ source_folder }}"
   become: true
 
-- name: Clone the Git repository using HTTPS
+- name: Clone or update the Git repository
   ansible.builtin.git:
     repo: "{{ github_repo_url }}"
-    dest: "{{ frontend_project_folder }}"
+    dest: "{{ source_folder }}"
     version: "main"
-    clone: true
-    force: true
+    force: yes
+    update: yes
   register: git_clone_result
 
-- name: Ensure the repository is cloned
+- name: Ensure the repository is cloned or updated
   ansible.builtin.assert:
     that:
       - git_clone_result.after is defined
-    fail_msg: "Failed to clone the repository."
+    fail_msg: "Failed to clone or update the repository."
 
-- name: Check if the required folder exists
+# - name: Check if the required folder exists
+#   ansible.builtin.stat:
+#     path: "{{ source_folder }}"
+#   register: folder_check
+
+# - name: Assert the required folder exists
+#   ansible.builtin.assert:
+#     that:
+#       - folder_check.stat.isdir
+#     fail_msg: "The required folder does not exist: {{ source_folder }}"
+
+- name: Check for package.json file
   ansible.builtin.stat:
-    path: "{{ frontend_project_folder }}"
-  register: folder_check
-
-- name: Assert the required folder exists
-  ansible.builtin.assert:
-    that:
-      - folder_check.stat.isdir
-    fail_msg: "The required folder does not exist: {{ frontend_project_folder }}"
-
-- name: Check if the required file exists
-  ansible.builtin.stat:
-    path: "{{ frontend_project_folder }}/package.json"
+    path: "{{ source_folder }}/package.json"
   register: file_check
 
 - name: Assert the required file exists

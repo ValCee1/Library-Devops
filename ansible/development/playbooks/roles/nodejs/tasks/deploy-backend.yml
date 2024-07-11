@@ -1,27 +1,121 @@
-- name: "Check if the folder exists on the Backend"
+- name: "Check if the Source folder exists on the Backend"
   ansible.builtin.stat:
-    path: "{{ backend_project_folder }}"
+    path: "{{ source_folder }}"
   register: backend_dir_stat
 
-- name: "Debug Backend directory non-existence"
+- name: "Debug Source directory non-existence"
   ansible.builtin.fail:
     msg: "The backend directory does not exist."
   when: not backend_dir_stat.stat.exists
 
-- name: "Copy Bcakend ENV Variables"
+
+- name: Create Project Folder
+  file:
+    path: "{{ project_folder }}"
+    state: directory
+    owner: "{{ new_username }}"
+    group: "{{ new_username }}"
+    mode: '0755'
+
+- name: Copy Files
+  copy:
+    src: "{{ source_folder }}/"
+    dest: "{{ project_folder }}"
+    owner: "{{ new_username }}"
+    group: "{{ new_username }}"
+    mode: '0755'
+    remote_src: true
+
+
+
+- name: "Check if the Project folder exists on the Backend"
+  ansible.builtin.stat:
+    path: "{{ project_folder }}"
+  register: project_dir_stat
+
+- name: "Debug Project folder  non-existence"
+  ansible.builtin.fail:
+    msg: "The backend directory does not exist."
+  when: not project_dir_stat.stat.exists
+
+
+- name: Copy backend environment variables
   ansible.builtin.template:
     src: backend.env.j2
-    dest: "{{ backend_project_folder }}/config.env"
+    dest: "{{ project_folder }}/config.env"
+  when: project_dir_stat.stat.exists
+  changed_when: false
 
-- name: "Run the next task only if the Backkend folder exists"
-  debug:
-    msg: "Backend folder Complete. Proceeding with next tasks."
-  when: backend_dir_stat.stat.exists
 
-- name: "NPM Install for Bcakend"
+
+- name: Delete NPM Folder if already existent
+  file:
+    path: "{{ project_folder }}/node_modules"
+    state: absent
+
+- name: Install pm2 globally
+  ansible.builtin.npm:
+    name: pm2
+    state: latest
+    global: true
+  changed_when: false
   args:
-    chdir: "{{ backend_project_folder }}"
-  command: 
-    npm install
-    pm2 start server.js
-    
+    path: "{{ project_folder }}"
+
+- name: Install backend packages based on package.json.
+  community.general.npm:
+    path: "{{ project_folder }}"
+
+- name: Check for config file
+  ansible.builtin.stat:
+    path: "{{ project_folder }}/config.env"
+  register: file_check
+
+- name: Assert the required file exists
+  ansible.builtin.assert:
+    that:
+      - file_check.stat.exists
+    fail_msg: "The required file does not exist: config.env"
+
+- name: Check if PM2 process exists
+  ansible.builtin.command: "pm2 id {{ app_name }}"
+  register: pm2_check
+  changed_when: false
+  failed_when: false
+  ignore_errors: true
+
+- name: Output message if no pm2 process found
+  debug:
+    msg: "No running pm2 process found with app name: {{ app_name }}"
+  when: pm2_check.rc != 0
+  failed_when: false
+
+- name: Stop the pm2 process if it is running
+  command: pm2 stop "{{ app_name }}"
+  when: pm2_check.rc == 0
+  failed_when: false
+
+- name: Delete the pm2 process if it is running
+  command: pm2 delete "{{ app_name }}"
+  when: pm2_check.rc == 0
+  failed_when: false
+
+- name: Start NodeJS app with PM2
+  ansible.builtin.command:
+    cmd: "pm2 start server.js --name {{ app_name }} --update-env"
+  args:
+    chdir: "{{ project_folder }}"
+  become: false
+
+- name: Save PM2 process list
+  ansible.builtin.command: pm2 save
+  changed_when: false
+  become: false
+
+- name: Set PM2 to start on boot if not already set
+  ansible.builtin.command:
+    cmd: sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u $USER --hp $HOME
+  register: pm2_startup
+  changed_when: pm2_startup.rc == 0
+  become: false
+  

@@ -1,11 +1,14 @@
----
-# handlers file for playbooks/roles/telegraf
-
 - name: Reload systemd
-  command: systemctl daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: true
 
 - name: Enable and start Telegraf service
-  systemd:
+  ansible.builtin.systemd:
     name: telegraf
-    enabled: true
     state: started
+    enabled: yes
+
+- name: Restart Telegraf
+  ansible.builtin.systemd:
+    name: telegraf
+    state: restarted

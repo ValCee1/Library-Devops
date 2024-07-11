@@ -1,17 +1,21 @@
-# - name: Import Playbooks for frontend
-#   ansible.builtin.import_playbook: stack_playbook.yaml
-#   vars:
-#     stack: frontend
-# - name: Import Playbooks for backend
-#   ansible.builtin.import_playbook: stack_playbook.yaml
-#   vars:
-#     stack: backend
+- name: Import Playbooks for backend
+  ansible.builtin.import_playbook: stack_playbook.yaml
+  vars:
+    stack: backend
 
-# - name: Import Playbooks for Monitoring
-#   ansible.builtin.import_playbook: monitors.yaml
+- name: Import Playbooks for frontend
+  ansible.builtin.import_playbook: stack_playbook.yaml
+  vars:
+    stack: frontend
+
+- name: Import Playbooks for Monitoring
+  ansible.builtin.import_playbook: monitors.yaml
 
 - name: Import Playbooks for monitored machines
   ansible.builtin.import_playbook: monitored.yaml
+
+- name: Render Dockerfile and JenkinsFile with Ansible variables
+  ansible.builtin.import_playbook: localhost.yaml
 
 - name: Restart Nodes
   hosts: all
@@ -21,4 +25,4 @@
     - name: Reboot the machine
       ansible.builtin.reboot:
         msg: "Reboot initiated by Ansible playbook"
-        reboot_timeout: 60
+        reboot_timeout: 300

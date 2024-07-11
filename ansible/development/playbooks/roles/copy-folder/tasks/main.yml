@@ -24,4 +24,3 @@
   debug:
     msg: "Folder exists and was copied successfully. Proceeding with next tasks."
   when: folder_stat.stat.exists
-  

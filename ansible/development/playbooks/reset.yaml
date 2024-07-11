@@ -1,0 +1,53 @@
+---
+- name: "Reset The Instance"
+  remote_user: "{{ new_username }}"
+  hosts: frontend
+  become: yes
+  tasks:
+    - name: Stop all non-essential services
+      shell: |
+        for service in $(systemctl list-units --type=service --state=running --no-pager --no-legend | awk '{print $1}'); do
+          if [[ $service != "ssh.service" && $service != "systemd-journald.service" ]]; then
+            systemctl stop $service || true
+          fi
+        done
+
+    - name: Uninstall all installed packages
+      package:
+        name: "*"
+        state: absent
+
+    - name: Delete all files and directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/home/{{ new_username }}/*"
+        # - /root
+        # - /var
+        - /opt
+        - /srv
+        - /tmp
+        - /usr/local
+        - /mnt
+        - /media
+
+    - name: Remove specific non-essential services
+      service:
+        name: "{{ item }}"
+        state: stopped
+        enabled: no
+      loop:
+        - nginx
+        - nodejs
+
+    # - name: Disable swap
+    #   command: swapoff -a
+
+    # - name: Wipe out disks #(Optional: Be very careful with this)
+    #   shell: dd if=/dev/zero of=/dev/sda bs=1M status=progress || true
+    #   ignore_errors: yes
+
+    # - name: Ensure system reboots (Optional)
+    #   reboot:
+    #     reboot_timeout_sec: 300

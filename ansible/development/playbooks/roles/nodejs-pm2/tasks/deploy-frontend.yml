@@ -1,0 +1,107 @@
+---
+- name: Ensure frontend directory exists
+  ansible.builtin.stat:
+    path: "{{ source_folder }}"
+  register: frontend_dir_stat
+
+- name: Abort if frontend directory does not exist
+  ansible.builtin.fail:
+    msg: "The frontend directory does not exist."
+  when: not frontend_dir_stat.stat.exists
+
+- name: Copy frontend environment variables
+  ansible.builtin.template:
+    src: frontend.env.j2
+    dest: "{{ source_folder }}/.env"
+  when: frontend_dir_stat.stat.exists
+  changed_when: false
+
+# - name: NPM Install for frontend
+#   ansible.builtin.command:
+#     cmd: npm install
+#     chdir: "{{ source_folder }}"
+#   args:
+#     creates: "{{ source_folder }}/node_modules"
+
+- name: Delete NPM Folder if already existent
+  file:
+    path: "{{ source_folder }}/node_modules"
+    state: absent
+
+- name: Install frontend packages based on package.json.
+  community.general.npm:
+    path: "{{ source_folder }}"
+
+- name: Install pm2 globally
+  ansible.builtin.npm:
+    name: pm2
+    state: latest
+    global: true
+  changed_when: false
+
+- name: Build the React app if build folder is missing
+  ansible.builtin.command:
+    cmd: npm run build
+    chdir: "{{ source_folder }}"
+  args:
+    creates: "{{ source_folder }}/build/index.html"
+
+
+# - name: Free up port 80 by killing processes using it
+#   ansible.builtin.shell: "sudo lsof -t -i tcp:80 -s tcp:listen | sudo xargs kill"
+#   ignore_errors: true
+#   changed_when: false
+
+- name: Check what's using port 80
+  ansible.builtin.shell: sudo lsof -i :80
+  register: port_80_check
+  changed_when: false
+  ignore_errors: true
+
+- name: Display what's using port 80
+  ansible.builtin.debug:
+    var: port_80_check.stdout_lines
+
+# - name: Stop process using port 80
+#   ansible.builtin.systemd:
+#     name: "{{ item }}"
+#     state: stopped
+#   loop:
+#     - nginx # Add other potential services here
+#   ignore_errors: true
+
+- name: Check if PM2 process exists
+  ansible.builtin.command: "pm2 id {{ pm2_name }}"
+  register: pm2_check
+  changed_when: false
+  failed_when: false
+  ignore_errors: true
+
+- name: Stop and delete existing PM2 process
+  ansible.builtin.command: "pm2 delete {{ pm2_name }}"
+  when: pm2_check.rc == 0
+  ignore_errors: true
+
+- name: Start React app with PM2 serve
+  ansible.builtin.command:
+    cmd: "sudo pm2 serve {{ root }} --port 80 --name {{ pm2_name }} --spa "
+  args:
+    creates: "{{ pm2_runtime_path }}/{{ pm2_name }}.json"
+  register: pm2_serve
+  changed_when: pm2_serve.rc != 0
+
+- name: Save PM2 process list
+  ansible.builtin.command: sudo pm2 save
+  changed_when: false
+
+- name: Set PM2 to start on boot if not already set
+  ansible.builtin.command:
+    cmd: sudo pm2 startup systemd -u $USER --hp $HOME
+  register: pm2_startup
+  changed_when: pm2_startup.rc == 0 # Changed only if the command succeeds (rc == 0)
+
+# - name: Ensure Nginx service is running and enabled
+#   ansible.builtin.service:
+#     name: nginx
+#     state: started
+#     enabled: true

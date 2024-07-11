@@ -8,12 +8,11 @@
   ansible.builtin.apt:
     name: nodejs
     state: present
-   
 
 - name: Validate required variables
   fail:
     msg: "Required variables not set"
-  when: 
+  when:
     - DB_USERNAME is not defined
     - DB_PASSWORD is not defined
     - backend_port is not defined
@@ -21,11 +20,9 @@
     - admin_Mail is not defined
     - mail_Password is not defined
 
-- name: Run Backend deployment tasks
-  import_tasks: deploy-backend.yml
-  when: stack == "backend"
-
-
-- name: Run frontend deployment tasks
-  import_tasks: deploy-frontend.yml
-  when: stack == "frontend"
+- name: "Run deployment tasks for {{ stack }}"
+  import_tasks: "deploy-{{ stack }}.yml"
+# - name: "Verify PM2 Installation and configuration for backend"
+#   ansible.builtin.include_tasks:
+#     file: verify.yaml
+#   when: stack == "backend"

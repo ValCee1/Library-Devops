@@ -1,0 +1,13 @@
+---
+- name: Render Dockerfile and JenkinsFile with Ansible variables
+  hosts: localhost
+  tasks:
+    - name: Render Dockerfile
+      template:
+        src: ../../templates/Dockerfile.j2
+        dest: ../../Dockerfile
+
+    - name: Render Jenkinsfile
+      template:
+        src: ../../templates/Jenkinsfile.j2
+        dest: ../../Jenkinsfile

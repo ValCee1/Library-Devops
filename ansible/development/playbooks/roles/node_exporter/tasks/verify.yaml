@@ -1,0 +1,57 @@
+- name: Check if node_exporter binary exists
+  stat:
+    path: /usr/local/bin/node_exporter
+  register: node_exporter_binary
+
+- name: Verify node_exporter binary
+  fail:
+    msg: "node_exporter binary not found in /usr/local/bin"
+  when: not node_exporter_binary.stat.exists
+
+- name: Check node_exporter version
+  command: /usr/local/bin/node_exporter --version
+  register: node_exporter_version
+  changed_when: false
+
+- name: Verify node_exporter version
+  assert:
+    that:
+      - "'node_exporter, version 1.5.0' in node_exporter_version.stdout"
+    fail_msg: "Unexpected node_exporter version"
+
+- name: Check if node_exporter service is running
+  systemd:
+    name: node_exporter
+  register: node_exporter_service
+
+- name: Verify node_exporter service status
+  assert:
+    that:
+      - node_exporter_service.status.ActiveState == "active"
+      - node_exporter_service.status.SubState == "running"
+    fail_msg: "node_exporter service is not running"
+
+- name: Check if node_exporter port is open
+  wait_for:
+    port: 9100
+    timeout: 5
+  register: port_check
+
+- name: Verify node_exporter port
+  assert:
+    that:
+      - port_check is succeeded
+    fail_msg: "node_exporter port 9100 is not open"
+
+- name: Check node_exporter metrics endpoint
+  uri:
+    url: http://localhost:9100/metrics
+    return_content: yes
+  register: metrics_response
+
+- name: Verify metrics endpoint response
+  assert:
+    that:
+      - metrics_response.status == 200
+      - "'node_' in metrics_response.content"
+    fail_msg: "node_exporter metrics endpoint is not responding correctly"

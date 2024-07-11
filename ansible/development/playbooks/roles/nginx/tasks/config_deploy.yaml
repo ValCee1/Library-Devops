@@ -34,8 +34,14 @@
   ansible.builtin.fail:
     msg: "Nginx configuration is invalid. Please check the configuration."
   when: nginx_config_test.rc != 0
+  
+- name: Start Nginx
+  shell: nginx
+  args:
+    creates: /var/run/nginx/nginx.pid
 
 - name: Ensure Nginx service is enabled
   ansible.builtin.service:
     name: nginx
     enabled: true
+

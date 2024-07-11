@@ -1,0 +1,61 @@
+- name: Check PM2 process status
+  shell: pm2 list
+  register: pm2_status
+  changed_when: false
+  become_user: "{{ new_username }}"
+
+- name: Display PM2 process status
+  debug:
+    var: pm2_status.stdout_lines
+
+- name: Verify PM2 process for the app is running
+  shell: pm2 show {{ app_name }}
+  register: pm2_app_status
+  changed_when: false
+  failed_when: "'online' not in pm2_app_status.stdout"
+  become_user: "{{ new_username }}"
+
+- name: Display PM2 app status
+  debug:
+    var: pm2_app_status.stdout_lines
+
+- name: Check PM2 logs for errors
+  shell: pm2 logs {{ app_name }} --lines 20
+  register: pm2_logs
+  changed_when: false
+  become_user: "{{ new_username }}"
+
+- name: Display recent PM2 logs
+  debug:
+    var: pm2_logs.stdout_lines
+
+- name: Check if PM2 is set to start on boot
+  shell: pm2 startup list
+  register: pm2_startup_status
+  changed_when: false
+  become_user: "{{ new_username }}"
+
+- name: Display PM2 startup status
+  debug:
+    var: pm2_startup_status.stdout_lines
+
+- name: Verify PM2 can connect to God Daemon
+  shell: pm2 ping
+  register: pm2_ping
+  changed_when: false
+  failed_when: "'pong' not in pm2_ping.stdout.lower()"
+  become_user: "{{ new_username }}"
+
+- name: Display PM2 ping result
+  debug:
+    var: pm2_ping.stdout
+
+- name: Check PM2 version
+  shell: pm2 --version
+  register: pm2_version
+  changed_when: false
+  become_user: "{{ new_username }}"
+
+- name: Display PM2 version
+  debug:
+    var: pm2_version.stdout

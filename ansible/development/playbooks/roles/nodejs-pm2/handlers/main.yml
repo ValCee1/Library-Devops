@@ -1,0 +1,15 @@
+---
+# handlers file for nodejs-latest
+# - name: Reload Nginx
+#   ansible.builtin.service:
+#     name: nginx
+#     state: reloaded
+
+- name: Save PM2 process list
+  ansible.builtin.command:
+    cmd: sudo pm2 save
+  changed_when: false
+# - name: Reload systemd daemon
+#   ansible.builtin.systemd:
+#     daemon_reload: true
+#   changed_when: false

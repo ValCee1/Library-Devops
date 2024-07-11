@@ -1,56 +1,62 @@
-
 - name: Install Nginx
   ansible.builtin.apt:
     name: nginx
     state: present
     update_cache: true
 
-- name: Remove default Nginx site
-  ansible.builtin.file:
-    path: /etc/nginx/sites-enabled/default
-    state: absent
-
-- name: Validate required variables
-  fail:
-    msg: "Required variables not set: nginx_listen_port, backend_port, server_names, domain"
-  when: 
-    - nginx_listen_port is not defined
-    - server_names is not defined
-    - domain is not defined
-    - backend_port is not defined
-    - frontend_port is not defined
-    - frontend_root is not defined
-    - backnd_root is not defined
-
-
-
-- name: Deploy Nginx config
-  import_tasks: config_deploy.yaml
-
-
-- name: Start Nginx service
-  ansible.builtin.service:
+- name: Create nginx group
+  group:
     name: nginx
-    state: started
+    state: present
+
+- name: Create nginx user
+  user:
+    name: nginx
+    group: nginx
+    shell: /sbin/nologin
+    home: /var/www
+    createhome: false
+
+- name: Ensure Project Folder exists
+  ansible.builtin.stat:
+    path: "{{ project_folder }}"
+  register: frontend_dir_stat
+
+- name: Create Project folder if not existent
+  file:
+    path: "{{ project_folder }}"
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: "0755"
+  when: not frontend_dir_stat.stat.exists
+
+- name: Ensure Nginx is running as nginx user
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    regexp: "^user"
+    line: "user nginx;"
+  notify: Restart Nginx
+
+- name: Deploy Nginx site configuration - backend
+  ansible.builtin.template:
+    src: "{{ stack }}.conf.j2"
+    dest: "/etc/nginx/sites-available/{{ domain }}.conf"
+  notify: Restart Nginx
+
+- name: Enable Nginx site
+  file:
+    src: "{{ nginx_conf_path }}"
+    dest: "/etc/nginx/sites-enabled/{{ domain }}.conf"
+    state: link
+  notify: Restart Nginx
+
+- name: Ensure Nginx configuration is valid
+  ansible.builtin.shell: nginx -t
+  ignore_errors: true
   register: nginx_service_status
-  failed_when: nginx_service_status.failed or nginx_service_status.state != "started"
 
-- name: Fetch Nginx service status
-  ansible.builtin.shell: systemctl status nginx.service
-  register: nginx_service_status_output
-  changed_when: false
-  ignore_errors: true
-
-- name: Fetch Nginx logs
-  ansible.builtin.shell: journalctl -xeu nginx.service
-  register: nginx_logs
-  changed_when: false
-  ignore_errors: true
-
-# - name: Display Nginx service status
-#   ansible.builtin.debug:
-#     var: nginx_service_status_output.stdout_lines
-
-# - name: Display Nginx logs
-#   ansible.builtin.debug:
-#     var: nginx_logs.stdout_lines
+- name: Verify Nginx Installation and configuration
+  ansible.builtin.include_tasks:
+    file: verify.yaml
+  when: nginx_service_status.failed

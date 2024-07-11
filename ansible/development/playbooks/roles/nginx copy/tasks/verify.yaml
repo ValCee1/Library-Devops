@@ -1,0 +1,33 @@
+- name: Display Nginx service status
+  ansible.builtin.debug:
+    var: nginx_service_status
+  when: nginx_service_status.failed
+
+- name: Fetch Nginx service status
+  ansible.builtin.command: systemctl status nginx.service
+  register: nginx_status_output
+  changed_when: false
+  ignore_errors: true
+  when: nginx_service_status.failed
+
+- name: Display Nginx service status details
+  ansible.builtin.debug:
+    var: nginx_status_output.stdout_lines
+  when: nginx_service_status.failed
+
+- name: Fetch Nginx error log
+  ansible.builtin.command: tail -n 50 /var/log/nginx/error.log
+  register: nginx_error_log
+  changed_when: false
+  ignore_errors: true
+  when: nginx_service_status.failed
+
+- name: Display Nginx error log
+  ansible.builtin.debug:
+    var: nginx_error_log.stdout_lines
+  when: nginx_service_status.failed
+
+- name: Fail the play if Nginx failed to start
+  ansible.builtin.fail:
+    msg: "Nginx failed to start. Please check the configuration and logs."
+  when: nginx_service_status.failed

@@ -1,0 +1,54 @@
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+
+- name: Remove default Nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Validate required variables
+  fail:
+    msg: "Required variables not set: nginx_listen_port, backend_port, server_names, domain"
+  when:
+    - nginx_listen_port is not defined
+    - server_names is not defined
+    - domain is not defined
+    - backend_port is not defined
+    - frontend_port is not defined
+    - frontend_root is not defined
+    - backnd_root is not defined
+
+- name: Check what's using port 80
+  ansible.builtin.shell: sudo lsof -i :80
+  register: port_80_check
+  changed_when: false
+  ignore_errors: true
+
+- name: Display what's using port 80
+  ansible.builtin.debug:
+    var: port_80_check.stdout_lines
+
+- name: Stop process using port 80
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+  loop:
+    - nginx # Add other potential services here
+  ignore_errors: true
+
+- name: Deploy Nginx config
+  import_tasks: config_deploy.yaml
+
+- name: Start Nginx service
+  ansible.builtin.service:
+    name: nginx
+    state: started
+  register: nginx_service_status
+  ignore_errors: true
+
+- name: Verify Nginx Installation and configuration
+  ansible.builtin.include_tasks:
+    file: verify.yaml

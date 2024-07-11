@@ -5,11 +5,13 @@
   gather_facts: true
   vars_files:
     - "~/private_files/var_files/my_secrets.yml"
-
   vars:
+    # LOKI
     loki_config_dir: "/etc/loki"
     loki_data_dir: "/var/lib/loki"
     loki_wal_directory: "/var/lib/loki/wal"
+
+    # PROMETHEUS
     prometheus_install_dir: "/opt/prometheus"
     prometheus_bin_dir: "{{ prometheus_install_dir }}/prometheus-{{ prometheus_version }}.linux-amd64"
     prometheus_config_dir: "/etc/prometheus"
@@ -20,7 +22,11 @@
     prometheus_user: "prometheus"
     prometheus_group: "prometheus"
 
+    # GRAFANA
+    prometheus_server_ip: "localhost"
+    loki_server_ip: "localhost"
+
   roles:
-    - grafana
-    - prometheus
     - loki
+    - prometheus
+    - grafana

@@ -1,5 +1,53 @@
-      [[outputs.influxdb]]
-        urls = ["http://{{ ansible_host }}:{{ telegraf_port }}"]
-        database = "telegraf"
-        username = "{{ telegraf_username }}"
-        password = "{{ telegraf_password }}"
+# Telegraf Configuration
+
+# Global Agent Configuration
+[agent]
+  interval = "10s"
+  round_interval = true
+  metric_batch_size = 1000
+  metric_buffer_limit = 10000
+  collection_jitter = "0s"
+  flush_interval = "10s"
+  flush_jitter = "0s"
+  precision = ""
+  debug = false
+  quiet = false
+  logfile = ""
+
+# Configuration for sending metrics to Prometheus PushGateway
+[[outputs.prometheus_client]]
+  listen = ":{{ prometheus_port }}"   #Should this be prometheus_port or telegraf_port?
+  path = "/metrics"
+  metric_version = 2
+
+# Configuration for sending logs to Loki
+[[outputs.loki]]
+  domain = "http://{{ monitor_ip }}:{{ loki_port }}"
+  endpoint = "/loki/api/v1/push"
+  timeout = "15s"
+  data_format = "json"
+
+
+# Collect system metrics
+[[inputs.cpu]]
+  percpu = true
+  totalcpu = true
+  collect_cpu_time = false
+  report_active = false
+
+[[inputs.mem]]
+  # no configuration
+
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+
+[[inputs.system]]
+  # no configuration
+
+[[inputs.net]]
+  # collect data only about specific interfaces
+  # interfaces = ["eth0"]
+
+# Collect system logs
+[[inputs.syslog]]
+  server = "tcp://localhost:{{ syslog_port }}"

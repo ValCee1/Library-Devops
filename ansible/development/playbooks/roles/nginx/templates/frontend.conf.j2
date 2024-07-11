@@ -7,15 +7,25 @@ server {
     listen 80;
     {% endif %}
 
-    root {{ root | default('/var/www/html') }};
-    index index.php index.html index.htm index.nginx-debian.html;
+    root {{ project_folder }};
+    index index.html;
     server_name {{ server_names | join(' ') }};
 
     location / {
-        try_files $uri $uri /index.html?$query_string;
+        try_files $uri $uri/ /index.html;
     }
 
-        # Enable Gzip compression for faster loading
+    location /static/ {
+        expires 1y;
+        add_header Cache-Control "public";
+    }
+
+    location = /favicon.ico {
+        log_not_found off;
+        access_log off;
+    }
+
+    # Enable Gzip compression for faster loading
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
     gzip_proxied any;
@@ -30,5 +40,3 @@ server {
     return 301 https://$host$request_uri;
 }
 {% endif %}
-
-

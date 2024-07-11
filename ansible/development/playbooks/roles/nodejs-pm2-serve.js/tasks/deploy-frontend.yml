@@ -1,0 +1,86 @@
+---
+- name: Ensure frontend directory exists
+  ansible.builtin.stat:
+    path: "{{ source_folder }}"
+  register: frontend_dir_stat
+
+- name: Abort if frontend directory does not exist
+  ansible.builtin.fail:
+    msg: "The frontend directory does not exist."
+  when: not frontend_dir_stat.stat.exists
+
+- name: Copy frontend environment variables
+  ansible.builtin.template:
+    src: frontend.env.j2
+    dest: "{{ source_folder }}/.env"
+  when: frontend_dir_stat.stat.exists
+  changed_when: false
+
+
+- name: Delete NPM Folder if already existent
+  file:
+    path: "{{ source_folder }}/node_modules"
+    state: absent
+
+- name: Install frontend packages based on package.json.
+  community.general.npm:
+    path: "{{ source_folder }}"
+
+- name: Create Project Folder
+  file:
+    path: "{{ project_folder }}"
+    state: directory
+    owner: "{{ new_username }}"
+    group: "{{ new_username }}"
+    mode: '0755'
+
+- name: Build the React app if build folder is missing
+  ansible.builtin.command:
+    cmd: npm run build
+    chdir: "{{ source_folder }}"
+  args:
+    creates: "{{ source_folder }}/build/index.html"
+
+
+- name: Copy Files
+  copy:
+    src: "{{ source_folder }}/build/"
+    dest: "{{ project_folder }}/build/"
+    owner: "{{ new_username }}"
+    group: "{{ new_username }}"
+    mode: '0755'
+    remote_src: true
+
+
+- name: Create simple server file
+  ansible.builtin.template:
+    src: server.js.j2
+    dest: "{{ project_folder }}/server.js"
+    owner: "{{ new_username }}"
+    group: "{{ new_username }}"
+    mode: '0644'
+
+- name: Install express
+  npm:
+    path: "{{ project_folder }}"
+    name: express
+  become_user: "{{ new_username }}"
+
+- name: Start PM2 process
+  shell: sudo pm2 start server.js --name {{ app_name }}
+  args:
+    chdir: "{{ project_folder }}"
+  become_user: "{{ new_username }}"
+
+- name: Save PM2 process list
+  shell: pm2 save
+  become_user: "{{ new_username }}"
+
+- name: Generate PM2 startup script
+  shell: pm2 startup systemd -u $USER --hp $HOMEm
+  register: pm2_startup
+  become_user: "{{ new_username }}"
+
+- name: Run PM2 startup script
+  shell: "{{ pm2_startup.stdout_lines[-1] }}"
+  when: pm2_startup.stdout_lines[-1] is defined

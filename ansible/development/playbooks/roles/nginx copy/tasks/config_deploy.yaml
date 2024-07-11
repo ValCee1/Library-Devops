@@ -1,0 +1,41 @@
+- name: Deploy Nginx site configuration - frontend
+  ansible.builtin.template:
+    src: frontend.conf.j2
+    dest: "/etc/nginx/sites-available/{{ domain }}.conf"
+    mode: '0644'
+    owner: root
+    group: root
+  when: stack == "frontend"
+
+
+- name: Deploy Nginx site configuration - backend
+  ansible.builtin.template:
+    src: backend.conf.j2
+    dest: "/etc/nginx/sites-available/{{ domain }}.conf"
+    mode: '0644'
+    owner: root
+    group: root
+  when: stack == "backend"
+
+- name: Enable site by creating a symbolic link
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ domain }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ domain }}.conf"
+    state: link
+    force: true
+
+
+- name: Ensure Nginx configuration is valid
+  ansible.builtin.shell: nginx -t
+  register: nginx_config_test
+  ignore_errors: true
+
+- name: Fail if Nginx configuration is invalid
+  ansible.builtin.fail:
+    msg: "Nginx configuration is invalid. Please check the configuration."
+  when: nginx_config_test.rc != 0
+
+- name: Ensure Nginx service is enabled
+  ansible.builtin.service:
+    name: nginx
+    enabled: true

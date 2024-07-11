@@ -1,0 +1,78 @@
+- name: "Check if the folder exists on the Backend"
+  ansible.builtin.stat:
+    path: "{{ source_folder }}"
+  register: backend_dir_stat
+
+- name: "Debug Source directory non-existence"
+  ansible.builtin.fail:
+    msg: "The backend directory does not exist."
+  when: not backend_dir_stat.stat.exists
+
+- name: "Run the next task only if the Backend folder exists"
+  debug:
+    msg: "Backend folder Complete. Proceeding with next tasks."
+  when: backend_dir_stat.stat.exists
+
+
+- name: Create Project Folder
+  file:
+    path: "{{ project_folder }}"
+    state: directory
+    owner: "{{ new_username }}"
+    group: "{{ new_username }}"
+    mode: '0755'
+
+- name: Copy Files
+  copy:
+    src: "{{ source_folder }}/"
+    dest: "{{ project_folder }}"
+    owner: "{{ new_username }}"
+    group: "{{ new_username }}"
+    mode: '0644'
+
+
+- name: "Copy Backend ENV Variables"
+  ansible.builtin.template:
+    src: backend.env.j2
+    dest: "{{ project_folder }}/config.env"
+
+- name: Delete NPM Folder if already existent
+  file:
+    path: "{{ project_folder }}/node_modules"
+    state: absent
+
+- name: Install backend packages based on package.json.
+  community.general.npm:
+    path: "{{ project_folder }}"
+
+
+- name: Check if PM2 process exists
+  ansible.builtin.command: "pm2 id {{ app_name }}"
+  register: pm2_check
+  changed_when: false
+  failed_when: false
+  ignore_errors: true
+
+- name: Stop and delete existing PM2 process
+  ansible.builtin.command: "pm2 delete {{ app_name }}"
+  when: pm2_check.rc == 0
+  ignore_errors: true
+
+- name: Start React app with PM2 serve
+  ansible.builtin.command:
+    cmd: "pm2 start server.js --name {{ app_name }}"
+  args:
+    chdir: "{{ project_folder }}"
+    creates: "{{ pm2_runtime_path }}/{{ app_name }}.json"
+  register: pm2_serve
+  changed_when: pm2_serve.rc != 0
+
+- name: Save PM2 process list
+  ansible.builtin.command: pm2 save
+  changed_when: false
+
+- name: Set PM2 to start on boot if not already set
+  ansible.builtin.command:
+    cmd: pm2 startup systemd -u $USER --hp $HOME
+  register: pm2_startup
+  changed_when: pm2_startup.rc == 0 # Changed only if the command succeeds (rc == 0)

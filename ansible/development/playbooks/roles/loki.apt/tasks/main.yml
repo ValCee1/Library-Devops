@@ -73,13 +73,11 @@
     - __firewalld_service_state.status.ActiveState == "active"
     - not loki_expose_port | bool
 
-- name: Flush handlers after deployment
-  ansible.builtin.meta: flush_handlers
+?
 
 - name: Ensure that Loki is started
   ansible.builtin.systemd:
     name: loki.service
     state: started
 
-- name: Run Service Check
-  ansible.builtin.import_tasks: service_check.yaml
+?

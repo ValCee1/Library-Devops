@@ -1,12 +1,19 @@
 - name: Set up monitoring tools for monitored machines
-  hosts: monitor
+  hosts: monitored
   remote_user: "{{ new_username }}"
   become: true
   gather_facts: true
   vars_files:
     - "~/private_files/var_files/my_secrets.yml"
-
+  vars:
+    telegraf_download_dir: "/opt/telegraf"
+    telegraf_config_dir: "/etc/telegraf"
+    telegraf_config_file: "{{ telegraf_config_dir }}/telegraf.conf"
+    telegraf_data_dir: "/var/lib/telegraf"
+    telegraf_binary_path: "/tmp/telegraf-{{ telegraf_version }}_linux_amd64.tar.gz"
+    telegraf_user: "telegraf"
+    telegraf_group: "telegraf"
   roles:
-    - promtail
-    - node-exporter
-    - telegraf
+    - promtail #1
+    - node_exporter #2
+    - telegraf #3

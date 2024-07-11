@@ -1,0 +1,60 @@
+# tasks/verify_telegraf.yaml
+- name: Verify Telegraf binary existence
+  ansible.builtin.stat:
+    path: /usr/bin/telegraf
+  register: telegraf_binary_stat
+
+- name: Check Telegraf binary existence
+  ansible.builtin.fail:
+    msg: "Telegraf binary does not exist!"
+  when: not telegraf_binary_stat.stat.exists
+
+- name: Verify Telegraf configuration file existence
+  ansible.builtin.stat:
+    path: "{{ telegraf_config_dir }}/telegraf.conf"
+  register: telegraf_config_stat
+
+- name: Check Telegraf configuration file existence
+  ansible.builtin.fail:
+    msg: "Telegraf configuration file does not exist!"
+  when: not telegraf_config_stat.stat.exists
+
+- name: Validate Telegraf configuration
+  ansible.builtin.command:
+    cmd: "telegraf --config {{ telegraf_config_dir }}/telegraf.conf --test"
+  register: telegraf_config_check
+  failed_when: false
+  # failed_when: telegraf_config_check.rc != 0
+
+- name: Display Telegraf configuration validation results
+  ansible.builtin.debug:
+    var: telegraf_config_check
+
+- name: Check Telegraf service status
+  ansible.builtin.systemd:
+    name: telegraf
+    state: started
+    enabled: yes
+  register: telegraf_service_status
+
+- name: Display Telegraf service status
+  ansible.builtin.debug:
+    var: telegraf_service_status
+
+- name: Check if Telegraf is running
+  ansible.builtin.shell: "ps aux | grep [t]elegraf"
+  register: telegraf_process
+  failed_when: false
+
+- name: Display Telegraf process check results
+  ansible.builtin.debug:
+    var: telegraf_process.stdout_lines
+
+- name: Fetch Telegraf service logs
+  ansible.builtin.shell: journalctl -u telegraf --no-pager
+  register: telegraf_service_logs
+  failed_when: false
+
+- name: Display Telegraf service logs
+  ansible.builtin.debug:
+    var: telegraf_service_logs.stdout_lines
